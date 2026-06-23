@@ -684,9 +684,10 @@ export default function BrowseView({
         </div>
 
         {/* AI conversational search — desktop: exactly two listing-rows tall,
-            aligned with the top of row 1 and the bottom of row 2. */}
+            aligned with the top of row 1 and the bottom of row 2. Sticky below
+            the (h-16) header so it stays in view while the results scroll. */}
         <aside
-          className="hidden lg:block w-76 shrink-0"
+          className="hidden lg:block w-76 shrink-0 sticky top-20 self-start"
           style={{ height: cardH ? cardH * 2 + GAP : undefined }}
         >
           <AiChatPanel {...aiChatProps} />

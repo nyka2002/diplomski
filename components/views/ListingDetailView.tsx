@@ -7,7 +7,6 @@ import { useApp } from "@/lib/app-context";
 import { translations, lowercasePreservingAcronyms } from "@/lib/i18n/translations";
 import type { Listing } from "@/lib/data/listings";
 import HeartButton from "@/components/HeartButton";
-import { GradientButton } from "@/components/common";
 
 export default function ListingDetailView({ listing }: { listing: Listing }) {
   const { lang, savedIds, toggleSaved, listingOrigin } = useApp();
@@ -151,41 +150,86 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
           </a>
         </div>
 
-        {/* Seller panel */}
+        {/* Seller / landlord panel. Seller data keeps its original casing (it's
+            proper nouns — names, agencies, emails). Only the fields that are
+            actually present render, so scraped ads without a phone/email don't
+            show empty rows. */}
         <aside>
           <div className="sticky top-24 bg-card rounded-2xl border border-border p-6 shadow-sm">
             <h3 className="font-extrabold text-foreground text-sm mb-5">
               {isRent ? tr.listing.landlordInfo : tr.listing.sellerInfo}
             </h3>
-            <div className="flex items-center gap-3 mb-5">
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
-                style={{ background: "linear-gradient(135deg, #7B6FC4, #C084A0)" }}
-              >
-                {lc(listing.seller.name[0] ?? "")}
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-foreground text-sm">{lc(listing.seller.name)}</p>
-                <p className="text-xs text-muted-foreground truncate">{lc(listing.seller.agency)}</p>
-              </div>
-            </div>
-            <div className="space-y-3 mb-5">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Phone size={13} className="shrink-0 text-purple-400" />
-                <span className="text-xs">{listing.seller.phone}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Mail size={13} className="shrink-0 text-pink-400" />
-                <span className="text-xs break-all">{lc(listing.seller.email)}</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                <Building2 size={13} className="shrink-0 text-purple-400" />
-                <span className="text-xs">{lc(listing.seller.agency)}</span>
-              </div>
-            </div>
-            <GradientButton className="w-full">
-              {isRent ? tr.listing.contactLandlord : tr.listing.contactSeller}
-            </GradientButton>
+            {(() => {
+              const { name, agency, phone, email } = listing.seller;
+              // The header name: prefer the person/agency name, fall back to agency.
+              const headerName = name || agency;
+              // Show agency as a sub-line only when it adds info beyond the name.
+              const subAgency = agency && agency !== name ? agency : "";
+              const hasAnyContact = Boolean(phone || email || subAgency);
+              return (
+                <>
+                  {headerName && (
+                    <div className="flex items-center gap-3 mb-5">
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
+                        style={{ background: "linear-gradient(135deg, #7B6FC4, #C084A0)" }}
+                      >
+                        {(headerName[0] ?? "").toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-foreground text-sm">{headerName}</p>
+                        {subAgency && (
+                          <p className="text-xs text-muted-foreground truncate">{subAgency}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {hasAnyContact ? (
+                    <div className="space-y-3 mb-5">
+                      {phone && (
+                        <a
+                          href={`tel:${phone}`}
+                          className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Phone size={13} className="shrink-0 text-purple-400" />
+                          <span className="text-xs">{phone}</span>
+                        </a>
+                      )}
+                      {email && (
+                        <a
+                          href={`mailto:${email}`}
+                          className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Mail size={13} className="shrink-0 text-pink-400" />
+                          <span className="text-xs break-all">{email}</span>
+                        </a>
+                      )}
+                      {subAgency && (
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <Building2 size={13} className="shrink-0 text-purple-400" />
+                          <span className="text-xs">{subAgency}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+                      {tr.listing.contactNote}
+                    </p>
+                  )}
+                  {listing.originalUrl && (
+                    <a
+                      href={listing.originalUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-center py-3 rounded-xl font-semibold text-sm text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                      style={{ background: "linear-gradient(135deg, #7B6FC4 0%, #C084A0 100%)" }}
+                    >
+                      {isRent ? tr.listing.contactLandlord : tr.listing.contactSeller}
+                    </a>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </aside>
       </div>

@@ -171,9 +171,11 @@ export default function ListingForm({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 backdrop-blur-sm">
-      <div className="my-8 w-full max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-xl">
-        <div className="mb-5 flex items-center justify-between">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      {/* Flex column with a capped height so the body scrolls internally and the
+          header + Save/Cancel footer stay pinned in view on long forms. */}
+      <div className="flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col rounded-3xl border border-border bg-card shadow-xl">
+        <div className="flex items-center justify-between p-6 pb-4">
           <h2 className="text-lg font-extrabold text-foreground">
             {listing ? ta.editListing : ta.newListing}
           </h2>
@@ -185,13 +187,14 @@ export default function ListingForm({
           </button>
         </div>
 
-        {formError && (
-          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
-            {formError}
-          </div>
-        )}
+        <div className="flex-1 overflow-auto px-6 py-1">
+          {formError && (
+            <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive">
+              {formError}
+            </div>
+          )}
 
-        <div className="space-y-4">
+          <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
@@ -277,9 +280,10 @@ export default function ListingForm({
           </div>
 
           {field(ta.fSourceUrl, "sourceUrl")}
+          </div>
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="flex gap-3 border-t border-border p-6">
           <GradientButton onClick={submit} disabled={saving} className="flex-1">
             {saving ? ta.saving : ta.save}
           </GradientButton>

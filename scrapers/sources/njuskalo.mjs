@@ -98,7 +98,18 @@ async function scrapeDetail(page, url, type) {
       areaText: areaKey ? facts[areaKey] : "",
       roomsText: facts["Broj soba"] || "",
       description: pickIn([".ClassifiedDetailDescription-text", "[itemprop='description']"]),
-      seller: { name: pickIn([".ClassifiedDetailOwnerDetails-title", ".ClassifiedDetailOwnerDetails-name"]) },
+      seller: (() => {
+        // Best-effort contact: njuškalo usually gates the phone behind a
+        // "Prikaži broj" click, but a mailto:/tel: link is sometimes present in
+        // the static markup. Capture whatever is exposed without interacting.
+        const box = document.querySelector(".ClassifiedDetailOwnerDetails") || document;
+        const href = (sel) => box.querySelector(sel)?.getAttribute("href") || "";
+        return {
+          name: pickIn([".ClassifiedDetailOwnerDetails-title", ".ClassifiedDetailOwnerDetails-name"]),
+          email: href("a[href^='mailto:']").replace(/^mailto:/i, "").trim(),
+          phone: href("a[href^='tel:']").replace(/^tel:/i, "").trim(),
+        };
+      })(),
       specs,
       postedRaw,
       images,
