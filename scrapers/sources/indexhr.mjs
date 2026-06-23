@@ -26,7 +26,7 @@ function externalIdFromUrl(url) {
 }
 
 // Choose the listing's price from all "€" leaf texts on the page (which also
-// include the €/m² figure and the neighbourhood price-comparison stats).
+// include the €/m² figure and the neighborhood price-comparison stats).
 //   rent → the monthly figure ("€/mjesec" or "€/mj").
 //   sale → the largest plain € amount: a property's asking price always dwarfs
 //          the €/m² comparison stats, so the max is the price. (For a rare
@@ -64,12 +64,15 @@ async function scrapeDetail(page, url, type) {
     const clean = (s) => (s || "").replace(/\s+/g, " ").trim();
     const meta = (prop) => document.querySelector(`meta[property="${prop}"]`)?.getAttribute("content") || "";
 
-    // Attributes by label text (robust to CSS-module hashing).
+    // Attributes by label text (robust to CSS-module hashing). The label and
+    // value render concatenated ("Broj soba3"), so each pattern must be the FULL
+    // label — a partial like "Broj etaža" would swallow the label's tail ("stana")
+    // into the value ("stanaJednoetažni").
     const facts = {};
     document.querySelectorAll("li,div,span,p").forEach((e) => {
       if (e.children.length > 3) return;
       const m = clean(e.textContent).match(
-        /^(Broj soba|Stambena površina|Kat|Godina izgradnje|Energetski razred|Tip stana|Broj etaža)\s*:?\s*(.+)$/i,
+        /^(Broj soba|Stambena površina|Broj etaža stana|Godina izgradnje|Energetski razred|Tip stana|Kat)\s*:?\s*(.+)$/i,
       );
       if (m && m[2].length < 30 && !facts[m[1]]) facts[m[1]] = m[2];
     });
@@ -81,7 +84,7 @@ async function scrapeDetail(page, url, type) {
       .map((e) => clean(e.textContent))
       .filter((t) => /€/.test(t));
 
-    // Neighbourhood: index exposes it reliably only in the price-comparison
+    // Neighborhood: index exposes it reliably only in the price-comparison
     // line ("…za naselje X"). It has no county and no clean city field.
     const naselje = (document.body.innerText.match(/za naselje\s+([^\n.<]{2,40})/i) || [])[1] || "";
 
@@ -126,7 +129,7 @@ async function scrapeDetail(page, url, type) {
 
   const title = raw.ogTitle.replace(/\s*\|\s*INDEX OGLASI\s*$/i, "").trim();
   const priceText = pickPrice(raw.prices, type);
-  // Location: index has no county/clean-city field — use the neighbourhood it
+  // Location: index has no county/clean-city field — use the neighborhood it
   // exposes ("…za naselje X") when present, else leave it blank.
   const city = raw.naselje;
   const description = raw.description || raw.ogDesc.split("\n").slice(1).join(" ").trim();

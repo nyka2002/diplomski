@@ -64,8 +64,8 @@ browser can run (VM, GitHub Action, cron):
   JS-rendered SPA with hashed CSS classes, so its adapter anchors on stable
   signals (og: meta, the image-CDN URL pattern, attribute label text, the
   "Objavljen" date). **Index caveat:** the site exposes no county and no clean
-  city — only a neighbourhood ("…za naselje X"), so index listings carry a
-  neighbourhood-level location (or none); the place is still in the (searchable,
+  city — only a neighborhood ("…za naselje X"), so index listings carry a
+  neighborhood-level location (or none); the place is still in the (searchable,
   embedded) title. For sale, the listed price can include an original+discounted
   pair; the adapter takes the larger property-scale figure.
 - **Dedupe:** id is `${source}-${externalId}`; a `content_hash` lets re-crawls skip

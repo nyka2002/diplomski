@@ -3,9 +3,9 @@
 // when OpenAI isn't configured / the call fails — ingestion must not depend on
 // it (listings stay Croatian in both languages until a later run translates).
 //
-// Proper nouns (place names, neighbourhoods, person/agency names) are NOT sent
+// Proper nouns (place names, neighborhoods, person/agency names) are NOT sent
 // here and are kept as-is; only the title, description, and spec rows (label +
-// value) are translated.
+// value) are translated. Output is American English.
 import { env } from "./env.mjs";
 
 const MODEL = "gpt-4o-mini";
@@ -21,8 +21,10 @@ export async function translateListing({ title, description, specs }) {
 
   const system =
     "You are a professional Croatian→English translator for real-estate listings. " +
-    "Translate the title, description, and each spec's label and value into natural English. " +
-    "Keep proper nouns (city/neighbourhood names, person and agency names) unchanged. " +
+    "Translate the title, description, and each spec's label and value into natural " +
+    "AMERICAN English (US spelling and vocabulary — e.g. 'apartment' not 'flat', " +
+    "'one-story' not 'one-storey', 'neighborhood', 'favorite', 'meter'). " +
+    "Keep proper nouns (city/neighborhood names, person and agency names) unchanged. " +
     "Keep numbers, measurements and units (m², €), energy classes, and codes exactly as-is. " +
     "Return ONLY JSON of the shape " +
     '{"title":string,"description":string,"specs":[{"label":string,"value":string}]} ' +
