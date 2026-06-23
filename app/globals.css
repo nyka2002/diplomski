@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap");
+
+@import "tailwindcss";
+
+@source './**/*.{ts,tsx}';
+@source '../components/**/*.{ts,tsx}';
+@source '../lib/**/*.{ts,tsx}';
+
+@import "tw-animate-css";
+
+@import "./theme.css";
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    font-family: "Manrope", sans-serif;
+  }
+}
