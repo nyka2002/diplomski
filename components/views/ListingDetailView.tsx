@@ -20,8 +20,12 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [listing.id]);
 
-  const title = lang === "en" ? listing.title : listing.titleHr;
-  const description = lang === "en" ? listing.description : listing.descriptionHr;
+  // The whole property detail renders in lowercase (matching the app's
+  // lowercase aesthetic), preserving all-caps acronyms.
+  const lc = lowercasePreservingAcronyms;
+  const title = lc(lang === "en" ? listing.title : listing.titleHr);
+  const description = lc(lang === "en" ? listing.description : listing.descriptionHr);
+  const isRent = listing.type === "rent";
   const prev = () => setIdx((i) => (i - 1 + listing.images.length) % listing.images.length);
   const next = () => setIdx((i) => (i + 1) % listing.images.length);
 
@@ -56,9 +60,9 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
           size="lg"
         />
       </div>
-      <p className="text-sm text-muted-foreground mb-2">{listing.location}</p>
+      <p className="text-sm text-muted-foreground mb-2">{lc(listing.location)}</p>
       <p className="text-2xl font-extrabold mb-8" style={{ color: "var(--primary)" }}>
-        {listing.price}
+        {lc(listing.price)}
       </p>
 
       {/* Gallery */}
@@ -118,7 +122,7 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
                         {lowercasePreservingAcronyms(lang === "en" ? label : labelHr)}
                       </td>
                       <td className="px-5 py-3 text-sm text-foreground font-bold">
-                        {lang === "en" ? value : (valueHr ?? value)}
+                        {lc(lang === "en" ? value : (valueHr ?? value))}
                       </td>
                     </tr>
                   ))}
@@ -140,17 +144,19 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
         {/* Seller panel */}
         <aside>
           <div className="sticky top-24 bg-card rounded-2xl border border-border p-6 shadow-sm">
-            <h3 className="font-extrabold text-foreground text-sm mb-5">{tr.listing.seller}</h3>
+            <h3 className="font-extrabold text-foreground text-sm mb-5">
+              {isRent ? tr.listing.landlordInfo : tr.listing.sellerInfo}
+            </h3>
             <div className="flex items-center gap-3 mb-5">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shrink-0"
                 style={{ background: "linear-gradient(135deg, #7B6FC4, #C084A0)" }}
               >
-                {listing.seller.name[0]}
+                {lc(listing.seller.name[0] ?? "")}
               </div>
               <div className="min-w-0">
-                <p className="font-bold text-foreground text-sm">{listing.seller.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{listing.seller.agency}</p>
+                <p className="font-bold text-foreground text-sm">{lc(listing.seller.name)}</p>
+                <p className="text-xs text-muted-foreground truncate">{lc(listing.seller.agency)}</p>
               </div>
             </div>
             <div className="space-y-3 mb-5">
@@ -160,14 +166,16 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
               </div>
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Mail size={13} className="shrink-0 text-pink-400" />
-                <span className="text-xs break-all">{listing.seller.email}</span>
+                <span className="text-xs break-all">{lc(listing.seller.email)}</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 <Building2 size={13} className="shrink-0 text-purple-400" />
-                <span className="text-xs">{listing.seller.agency}</span>
+                <span className="text-xs">{lc(listing.seller.agency)}</span>
               </div>
             </div>
-            <GradientButton className="w-full">{tr.listing.contact}</GradientButton>
+            <GradientButton className="w-full">
+              {isRent ? tr.listing.contactLandlord : tr.listing.contactSeller}
+            </GradientButton>
           </div>
         </aside>
       </div>

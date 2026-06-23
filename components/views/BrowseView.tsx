@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { SlidersHorizontal, X, ChevronDown, Sparkles } from "lucide-react";
+import { SlidersHorizontal, X, ChevronDown, Sparkles, Search } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { translations } from "@/lib/i18n/translations";
 import type { Listing, ListingFilters, LocationGroup, SortOption } from "@/lib/listings/types";
@@ -20,22 +20,27 @@ const AMENITIES = ["balcony", "parking", "furnished", "pets"] as const;
 const inputCls =
   "w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-700 transition-all";
 
-// A dropdown that opens a panel of checkboxes for multi-select (neighborhoods).
+// A dropdown that opens a panel of checkboxes for multi-select (neighborhoods),
+// with a search box at the top to filter long lists.
 function CheckboxDropdown({
   placeholder,
+  searchPlaceholder,
   selectedLabel,
   options,
   selected,
   onToggle,
 }: {
   placeholder: string;
+  searchPlaceholder: string;
   selectedLabel: (n: number) => string;
   options: string[];
   selected: string[];
   onToggle: (value: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -44,6 +49,14 @@ function CheckboxDropdown({
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+    else setQuery("");
+  }, [open]);
+
+  const q = query.trim().toLowerCase();
+  const visible = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
 
   return (
     <div className="relative" ref={ref}>
@@ -58,21 +71,40 @@ function CheckboxDropdown({
         <ChevronDown size={14} className="shrink-0 text-muted-foreground" />
       </button>
       {open && (
-        <div className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-lg border border-border bg-card shadow-lg p-1">
-          {options.map((opt) => (
-            <label
-              key={opt}
-              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer text-sm text-foreground"
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(opt)}
-                onChange={() => onToggle(opt)}
-                className="w-4 h-4 rounded accent-purple-500"
-              />
-              {opt}
-            </label>
-          ))}
+        <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-lg p-1">
+          <div className="relative mb-1">
+            <Search
+              size={13}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+            />
+            <input
+              ref={searchRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full rounded-md border border-border bg-input-background pl-8 pr-2 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-300 dark:focus:ring-purple-700"
+            />
+          </div>
+          <div className="max-h-56 overflow-auto">
+            {visible.map((opt) => (
+              <label
+                key={opt}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted cursor-pointer text-sm text-foreground"
+              >
+                <input
+                  type="checkbox"
+                  checked={selected.includes(opt)}
+                  onChange={() => onToggle(opt)}
+                  className="w-4 h-4 rounded accent-purple-500"
+                />
+                {opt}
+              </label>
+            ))}
+            {visible.length === 0 && (
+              <p className="px-2 py-1.5 text-sm text-muted-foreground">—</p>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -522,6 +554,8 @@ export default function BrowseView({
                   value={filters.county ?? ""}
                   placeholder={tr.filters.any}
                   clearable
+                  searchable
+                  searchPlaceholder={tr.filters.search}
                   ariaLabel={tr.filters.county}
                   options={counties.map((c) => ({ value: c, label: c }))}
                   onChange={setCounty}
@@ -537,6 +571,8 @@ export default function BrowseView({
                 value={filters.city ?? ""}
                 placeholder={tr.filters.any}
                 clearable
+                searchable
+                searchPlaceholder={tr.filters.search}
                 ariaLabel={tr.filters.city}
                 options={cityOptions.map((l) => ({ value: l.city, label: l.city }))}
                 onChange={setCity}
@@ -550,6 +586,7 @@ export default function BrowseView({
                 </label>
                 <CheckboxDropdown
                   placeholder={tr.filters.any}
+                  searchPlaceholder={tr.filters.search}
                   selectedLabel={(n) => `${n} ${tr.filters.selected}`}
                   options={neighborhoodOptions}
                   selected={filters.neighborhoods ?? []}

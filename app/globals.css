@@ -11,11 +11,14 @@
 @import "./theme.css";
 
 @layer base {
-  html,
-  body {
+  html {
     height: 100%;
   }
+  /* min-height (not height:100%) so the body box grows with content. A fixed
+     height:100% caps the body at one viewport, which makes the sticky header
+     unstick — and visually disappear — once the page scrolls past the fold. */
   body {
+    min-height: 100%;
     font-family: "Manrope", sans-serif;
   }
 }
