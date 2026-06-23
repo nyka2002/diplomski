@@ -26,6 +26,14 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
   const title = lc(lang === "en" ? listing.title : listing.titleHr);
   const description = lc(lang === "en" ? listing.description : listing.descriptionHr);
   const isRent = listing.type === "rent";
+  // Spec rows that hold a place name (location / address / street / city /
+  // county / neighborhood, EN or HR) keep their original casing — lowercasing a
+  // proper noun like "Zagreb, Trešnjevka" reads wrong. Everything else (rooms,
+  // area, energy class, …) still renders lowercase.
+  const isPlaceLabel = (label: string, labelHr: string) =>
+    /location|address|street|neighbo|city|county|district|lokacij|adres|ulic|kvart|mjesto|naselj|grad|župan/i.test(
+      `${label} ${labelHr}`,
+    );
   const prev = () => setIdx((i) => (i - 1 + listing.images.length) % listing.images.length);
   const next = () => setIdx((i) => (i + 1) % listing.images.length);
 
@@ -60,7 +68,7 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
           size="lg"
         />
       </div>
-      <p className="text-sm text-muted-foreground mb-2">{lc(listing.location)}</p>
+      <p className="text-sm text-muted-foreground mb-2">{listing.location}</p>
       <p className="text-2xl font-extrabold mb-8" style={{ color: "var(--primary)" }}>
         {lc(listing.price)}
       </p>
@@ -122,7 +130,9 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
                         {lowercasePreservingAcronyms(lang === "en" ? label : labelHr)}
                       </td>
                       <td className="px-5 py-3 text-sm text-foreground font-bold">
-                        {lc(lang === "en" ? value : (valueHr ?? value))}
+                        {isPlaceLabel(label, labelHr)
+                          ? (lang === "en" ? value : (valueHr ?? value))
+                          : lc(lang === "en" ? value : (valueHr ?? value))}
                       </td>
                     </tr>
                   ))}
