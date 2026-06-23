@@ -1,0 +1,36 @@
+# Scheduled scraping & ingestion (Playwright can't run on Vercel, so it runs here).
+# Drains admin-triggered runs, then does a full refresh + reconcile (retiring ads
+# that vanished from the source). Configure repo secrets:
+#   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
+name: scrape
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily at 03:00 UTC
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+# Avoid overlapping runs.
+concurrency:
+  group: scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Drain admin-triggered runs
+        run: npm run scrape:queue
+      - name: Nightly full refresh + reconcile
+        run: npm run scrape -- --reconcile
