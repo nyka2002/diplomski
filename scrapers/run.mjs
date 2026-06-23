@@ -69,6 +69,7 @@ async function runSourceType(browser, source, type, opts) {
           `  posted: ${l.posted_at || "(none — defaults to ingest time)"}\n` +
           `  images: ${l.images.length}\n` +
           `  attrs:  ${Object.entries(l.attributes).filter(([, v]) => v).map(([k]) => k).join(", ") || "(none)"}\n` +
+          `  seller: ${l.seller?.name || "(none)"} | phone: ${l.seller?.phone || "-"} | email: ${l.seller?.email || "-"}\n` +
           `  desc:   ${(l.description || "(empty)").slice(0, 120)}${l.description.length > 120 ? "…" : ""}\n` +
           `  url:    ${l.source_url}`,
       );

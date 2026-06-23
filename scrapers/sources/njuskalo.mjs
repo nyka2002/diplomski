@@ -104,9 +104,12 @@ async function scrapeDetail(page, url, type) {
         // the static markup. Capture whatever is exposed without interacting.
         const box = document.querySelector(".ClassifiedDetailOwnerDetails") || document;
         const href = (sel) => box.querySelector(sel)?.getAttribute("href") || "";
+        const email = href("a[href^='mailto:']").replace(/^mailto:/i, "").trim();
         return {
           name: pickIn([".ClassifiedDetailOwnerDetails-title", ".ClassifiedDetailOwnerDetails-name"]),
-          email: href("a[href^='mailto:']").replace(/^mailto:/i, "").trim(),
+          // Ignore the platform's own support address (njuškalo's contact link),
+          // which isn't the seller's.
+          email: /@njuskalo\.hr$/i.test(email) ? "" : email,
           phone: href("a[href^='tel:']").replace(/^tel:/i, "").trim(),
         };
       })(),
