@@ -2,6 +2,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { embedText } from "@/lib/ai/openai";
+import { withinLlmBudget } from "@/lib/ai/budget";
 import { LISTING_COLUMNS, rowToListing, type ListingRow } from "./map";
 import {
   AMENITY_KEYS,
@@ -117,8 +118,10 @@ export async function fetchListings(query: ListingQuery): Promise<ListingPage> {
   let candidates = (data as unknown as ListingRow[]).map(rowToListing);
 
   // 1) Semantic relevance ordering (only if a query embedding can be produced
-  //    and listings have embeddings; otherwise keep the sort order).
-  if (query.relevance) {
+  //    and listings have embeddings; otherwise keep the sort order). The embedding
+  //    is an OpenAI call on a public endpoint, so it's gated by the shared daily
+  //    budget; over budget → skip ranking (results still returned, just by sort).
+  if (query.relevance && (await withinLlmBudget())) {
     const embedding = await embedText(query.relevance).catch(() => null);
     if (embedding) {
       const ids = candidates.map((c) => c.id);

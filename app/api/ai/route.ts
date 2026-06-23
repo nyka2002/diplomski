@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { extractCriteria, isOpenAIConfigured, type ChatMessage } from "@/lib/ai/openai";
+import { withinLlmBudget } from "@/lib/ai/budget";
 import { fetchLocations } from "@/lib/listings/query";
 import type { Lang } from "@/lib/i18n/translations";
 
@@ -55,6 +56,12 @@ export async function POST(request: NextRequest) {
   const hit = cache.get(cacheKey);
   if (hit && hit.expires > Date.now()) {
     return NextResponse.json(hit.value);
+  }
+
+  // Shared daily cap (serverless-safe) — a cache miss means we're about to make a
+  // real OpenAI call, so count it against the global budget first.
+  if (!(await withinLlmBudget())) {
+    return NextResponse.json({ error: "rateLimited" }, { status: 429 });
   }
 
   let criteria;
