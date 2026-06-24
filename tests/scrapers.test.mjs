@@ -12,6 +12,7 @@ import {
   normalizeListing,
   parsePostedAt,
   splitLocation,
+  isApartmentTitle,
 } from "../scrapers/lib/normalize.mjs";
 
 let passed = 0;
@@ -62,6 +63,20 @@ check("parseRooms: N-sobni and words", () => {
 });
 
 // ── type ──────────────────────────────────────────────────────────────────────
+check("isApartmentTitle: keeps flats, drops business/land", () => {
+  // Apartments — including ones that merely mention an office use, the
+  // "Vinogradska" street, or a garage.
+  assert.equal(isApartmentTitle("Stan: Zagreb (Centar), 55 m2, novogradnja"), true);
+  assert.equal(isApartmentTitle("STAN 82m2, ŠUBIĆEVA, namj. kao ured"), true);
+  assert.equal(isApartmentTitle("PENTHOUSE NETO 118 m2 - Zagreb, Vinogradska bolnica"), true);
+  assert.equal(isApartmentTitle("2-sobni + GARAŽA, luksuzni"), true);
+  // Non-apartments.
+  assert.equal(isApartmentTitle("POSLOVNI PROSTOR U NOVOGRADNJI, VODICE"), false);
+  assert.equal(isApartmentTitle("URED/POSLOVNI PROSTOR, SVETA NEDELJA"), false);
+  assert.equal(isApartmentTitle("građevinsko i poljoprivredno zemljište"), false);
+  assert.equal(isApartmentTitle(""), false);
+});
+
 check("deriveType: rent vs sale", () => {
   assert.equal(deriveType("650 €/mj"), "rent");
   assert.equal(deriveType("najam stana"), "rent");

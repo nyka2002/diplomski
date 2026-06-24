@@ -29,16 +29,31 @@ function pick(selectors) {
 }
 
 async function collectDetailUrls(page, type, limit) {
-  const url = `${BASE}${LIST_PATH[type]}`;
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
-  const links = await page.evaluate(() => {
-    const sels = [".EntityList-item h3 a", "article a.link", ".entity-title a", "a.entity-title-link"];
-    const found = new Set();
-    for (const sel of sels)
-      document.querySelectorAll(sel).forEach((a) => a.href && found.add(a.href));
-    return [...found];
-  });
-  return links.filter((u) => /njuskalo\.hr/.test(u) && externalIdFromUrl(u)).slice(0, limit);
+  // Walk the paginated result list (?page=N) accumulating unique ad URLs until
+  // we have `limit` of them or a page yields nothing new (end of results). The
+  // page cap is a safety backstop against an unbounded loop.
+  const found = new Set();
+  const MAX_PAGES = 30;
+  for (let pg = 1; found.size < limit && pg <= MAX_PAGES; pg++) {
+    const url = pg === 1 ? `${BASE}${LIST_PATH[type]}` : `${BASE}${LIST_PATH[type]}?page=${pg}`;
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    const links = await page.evaluate(() => {
+      const sels = [".EntityList-item h3 a", "article a.link", ".entity-title a", "a.entity-title-link"];
+      const set = new Set();
+      for (const sel of sels)
+        document.querySelectorAll(sel).forEach((a) => a.href && set.add(a.href));
+      return [...set];
+    });
+    const before = found.size;
+    // Only real-estate detail URLs (…/nekretnine/…) — the list pages also embed
+    // promoted ads from unrelated categories (cars, books, pets, …) whose links
+    // the broad selectors above would otherwise pick up.
+    for (const u of links)
+      if (/njuskalo\.hr\/nekretnine\//.test(u) && externalIdFromUrl(u)) found.add(u);
+    if (found.size === before) break; // no new ads on this page → end of list
+    if (pg < MAX_PAGES) await throttle();
+  }
+  return [...found].slice(0, limit);
 }
 
 async function scrapeDetail(page, url, type) {

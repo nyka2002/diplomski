@@ -72,6 +72,22 @@ export function deriveType(hint) {
   return "sale";
 }
 
+// Whether an ad is an apartment listing. The classifieds apartment categories
+// occasionally contain seller-miscategorized non-apartments (business premises,
+// offices, land), so reject titles that clearly describe one of those. We match
+// the property TYPE words only — "poslovni prostor", "ured(ski) prostor",
+// "zemljište", "hala", "skladište" — and avoid substrings that legitimately
+// appear in apartment ads (e.g. a flat furnished "kao ured", the "Vinogradska"
+// street, a flat with a "garaža"). Cross-category junk (cars, books, …) is
+// filtered earlier by the source URL not being under the real-estate section.
+export function isApartmentTitle(title) {
+  const t = String(title || "").toLowerCase();
+  if (!t) return false;
+  return !/poslovni prostor|poslovnog prostora|\bposlovni\b|uredski|zemlji[šs]t|\bhala\b|skladi[šs]t|gospodarsk/.test(
+    t,
+  );
+}
+
 // Stable canonical id, e.g. "njuskalo-12345".
 export function listingId(source, externalId) {
   return `${source}-${String(externalId).replace(/[^a-z0-9_-]/gi, "")}`;

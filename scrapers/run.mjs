@@ -23,7 +23,7 @@
 import { chromium } from "playwright";
 import { requireEnv } from "./lib/env.mjs";
 import { SOURCES, SOURCE_KEYS } from "./sources/index.mjs";
-import { normalizeListing } from "./lib/normalize.mjs";
+import { normalizeListing, isApartmentTitle } from "./lib/normalize.mjs";
 import { ingest, reconcileStatus } from "./lib/pipeline.mjs";
 import { select, insertReturning, patch } from "./lib/supabase.mjs";
 
@@ -51,10 +51,16 @@ async function runSourceType(browser, source, type, opts) {
   const adapter = SOURCES[source];
   const runStart = new Date().toISOString();
   const raw = await adapter.collect(browser, { type, limit: opts.limit, log });
-  const listings = raw
+  const normalized = raw
     .filter((r) => r.externalId && r.title)
     .map((r) => normalizeListing(r, source));
-  log(`  normalized ${listings.length}/${raw.length} (${source}/${type})`);
+  // Keep apartments only — drop seller-miscategorized business premises / land.
+  const listings = normalized.filter((l) => isApartmentTitle(l.title_hr || l.title));
+  const dropped = normalized.length - listings.length;
+  log(
+    `  normalized ${listings.length}/${raw.length} (${source}/${type})` +
+      (dropped ? ` — dropped ${dropped} non-apartment` : ""),
+  );
 
   // In a dry run, dump what was extracted so selectors can be eyeballed.
   if (opts.dryRun) {

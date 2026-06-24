@@ -45,16 +45,31 @@ function pickPrice(leaves, type) {
 }
 
 async function collectDetailUrls(page, type, limit) {
-  await page.goto(`${BASE}${LIST_PATH[type]}`, { waitUntil: "domcontentloaded", timeout: 45000 });
-  await page.waitForTimeout(3000); // SPA: let the list render
-  const links = await page.evaluate(() => [
-    ...new Set(
-      [...document.querySelectorAll("a[href]")]
-        .map((a) => a.getAttribute("href"))
-        .filter((h) => h && /\/oglas\/[^/]+\/\d+$/.test(h)),
-    ),
-  ]);
-  return links.map((h) => new URL(h, "https://www.index.hr").href).filter(externalIdFromUrl).slice(0, limit);
+  // Page through the list (?stranica=N) collecting unique ad URLs until we hit
+  // `limit` or a page adds nothing new. Index is a small source whose paging is
+  // shallow, so the "no new ads" guard usually stops this after a page or two.
+  const found = new Set();
+  const MAX_PAGES = 20;
+  for (let pg = 1; found.size < limit && pg <= MAX_PAGES; pg++) {
+    const url = pg === 1 ? `${BASE}${LIST_PATH[type]}` : `${BASE}${LIST_PATH[type]}?stranica=${pg}`;
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await page.waitForTimeout(3000); // SPA: let the list render
+    const links = await page.evaluate(() => [
+      ...new Set(
+        [...document.querySelectorAll("a[href]")]
+          .map((a) => a.getAttribute("href"))
+          .filter((h) => h && /\/oglas\/[^/]+\/\d+$/.test(h)),
+      ),
+    ]);
+    const before = found.size;
+    for (const h of links) {
+      const abs = new URL(h, "https://www.index.hr").href;
+      if (externalIdFromUrl(abs)) found.add(abs);
+    }
+    if (found.size === before) break; // no new ads on this page → end of list
+    if (pg < MAX_PAGES) await throttle();
+  }
+  return [...found].slice(0, limit);
 }
 
 async function scrapeDetail(page, url, type) {
