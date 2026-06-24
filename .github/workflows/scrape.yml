@@ -1,13 +1,31 @@
 # Scheduled scraping & ingestion (Playwright can't run on Vercel, so it runs here).
-# Drains admin-triggered runs, then does a full refresh + reconcile (retiring ads
-# that vanished from the source). Configure repo secrets:
+#
+# Two jobs, because reconcile and the crawl limit are coupled: --reconcile marks
+# every active listing of a source NOT re-seen in the run as inactive. So it is
+# only safe on a FULL crawl whose limit exceeds the active set — otherwise it
+# would deactivate most of the catalog. We therefore split:
+#   • nightly  — drain admin runs + pick up NEW listings (no reconcile, small
+#                limit, fast).
+#   • weekly   — full crawl with a high limit + --reconcile (retire ads that
+#                truly vanished from the source). Needs a longer timeout.
+# (Ads wrongly retired by an under-sized reconcile self-heal: the next crawl that
+# re-sees them flips them back to active.)
+#
+# Configure repo secrets:
 #   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENAI_API_KEY
 name: scrape
 
 on:
   schedule:
-    - cron: "0 3 * * *" # daily at 03:00 UTC
-  workflow_dispatch: # allow manual runs from the Actions tab
+    - cron: "0 3 * * *" # nightly 03:00 UTC — new listings
+    - cron: "0 4 * * 0" # weekly Sun 04:00 UTC — full crawl + reconcile
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "refresh = add new listings; reconcile = full crawl + retire vanished"
+        default: refresh
+        type: choice
+        options: [refresh, reconcile]
 
 # Avoid overlapping runs.
 concurrency:
@@ -15,7 +33,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  scrape:
+  # Nightly: drain admin-triggered runs, then add new listings. No --reconcile.
+  refresh:
+    if: github.event.schedule == '0 3 * * *' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'refresh')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -32,5 +52,25 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Drain admin-triggered runs
         run: npm run scrape:queue
-      - name: Nightly full refresh + reconcile
-        run: npm run scrape -- --reconcile
+      - name: Pick up new listings
+        run: npm run scrape -- --limit=80
+
+  # Weekly: full crawl whose limit exceeds the active set, then reconcile.
+  reconcile:
+    if: github.event.schedule == '0 4 * * 0' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'reconcile')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Full crawl + reconcile
+        run: npm run scrape -- --limit=350 --reconcile

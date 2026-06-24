@@ -73,17 +73,20 @@ export function deriveType(hint) {
 }
 
 // Whether an ad is an apartment listing. The classifieds apartment categories
-// occasionally contain seller-miscategorized non-apartments (business premises,
-// offices, land), so reject titles that clearly describe one of those. We match
-// the property TYPE words only — "poslovni prostor", "ured(ski) prostor",
-// "zemljište", "hala", "skladište" — and avoid substrings that legitimately
-// appear in apartment ads (e.g. a flat furnished "kao ured", the "Vinogradska"
-// street, a flat with a "garaža"). Cross-category junk (cars, books, …) is
-// filtered earlier by the source URL not being under the real-estate section.
+// occasionally contain seller-miscategorized non-apartments, so reject titles
+// that clearly describe one of those property/offer types:
+//   • business / office / land: "poslovni prostor" (+ "posl. prostor"),
+//     "ured(ski) prostor", "zemljište", "hala", "skladište", "gospodarsk…"
+//   • a single room let on its own (title starting "Soba"/"Sobe")
+//   • short-stay hospitality ("dnevni najam" — daily rental of rooms/apartments)
+// We deliberately avoid substrings that legitimately appear in apartment ads
+// (a flat furnished "kao ured", the "Vinogradska" street, a flat with a
+// "garaža", a flat with "3 spavaće sobe"). Cross-category junk (cars, books, …)
+// is filtered earlier by the source URL not being under the real-estate section.
 export function isApartmentTitle(title) {
   const t = String(title || "").toLowerCase();
   if (!t) return false;
-  return !/poslovni prostor|poslovnog prostora|\bposlovni\b|uredski|zemlji[šs]t|\bhala\b|skladi[šs]t|gospodarsk/.test(
+  return !/poslovni prostor|poslovnog prostora|\bposlovni\b|posl\.\s*prostor|uredski|zemlji[šs]t|\bhala\b|skladi[šs]t|gospodarsk|dnevni najam|^\s*sob[ae]\b/.test(
     t,
   );
 }

@@ -70,10 +70,14 @@ check("isApartmentTitle: keeps flats, drops business/land", () => {
   assert.equal(isApartmentTitle("STAN 82m2, ŠUBIĆEVA, namj. kao ured"), true);
   assert.equal(isApartmentTitle("PENTHOUSE NETO 118 m2 - Zagreb, Vinogradska bolnica"), true);
   assert.equal(isApartmentTitle("2-sobni + GARAŽA, luksuzni"), true);
-  // Non-apartments.
+  assert.equal(isApartmentTitle("Stan: Split, dvije spavaće sobe, 62 m2"), true);
+  // Non-apartments: business / office / land / room / daily-rental hospitality.
   assert.equal(isApartmentTitle("POSLOVNI PROSTOR U NOVOGRADNJI, VODICE"), false);
   assert.equal(isApartmentTitle("URED/POSLOVNI PROSTOR, SVETA NEDELJA"), false);
+  assert.equal(isApartmentTitle("ČRNOMEREC - 3.SOB POSL. PROSTOR 69m2 + GARAŽA"), false);
   assert.equal(isApartmentTitle("građevinsko i poljoprivredno zemljište"), false);
+  assert.equal(isApartmentTitle("SOBA Slavonski Brod, sve režije u cijeni"), false);
+  assert.equal(isApartmentTitle('"LO" apartmani i sobe, 4* DNEVNI NAJAM'), false);
   assert.equal(isApartmentTitle(""), false);
 });
 

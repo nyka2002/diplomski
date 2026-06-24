@@ -45,12 +45,22 @@ npm run scrape -- --force        # re-translate + refresh dates on all listings
 ## Scheduling
 
 The admin button writes a `queued` row; run the worker on a schedule wherever a
-browser can run (VM, GitHub Action, cron):
+browser can run (VM, GitHub Action, cron). **`--reconcile` and `--limit` are
+coupled:** reconcile marks every active listing of a source NOT re-seen in the
+run as inactive, so it is only safe on a full crawl whose `--limit` exceeds the
+active set — otherwise it deactivates most of the catalog. So split it:
 
 ```cron
-0  3 * * *  cd /path/to/app && set -a && . ./.env.local && set +a && npm run scrape:queue
-30 3 * * *  cd /path/to/app && set -a && . ./.env.local && set +a && npm run scrape -- --reconcile
+# nightly — drain admin runs + add new listings (no reconcile, small limit)
+0 3 * * *  cd /path/to/app && set -a && . ./.env.local && set +a && npm run scrape:queue && npm run scrape -- --limit=80
+# weekly — full crawl + reconcile (limit must exceed the active per-source/type count)
+0 4 * * 0  cd /path/to/app && set -a && . ./.env.local && set +a && npm run scrape -- --limit=350 --reconcile
 ```
+
+`.github/workflows/scrape.yml` already implements this split (a nightly
+`refresh` job and a weekly `reconcile` job). Ads wrongly retired by an
+under-sized reconcile self-heal — the next crawl that re-sees them flips them
+back to active.
 
 ## Notes
 
