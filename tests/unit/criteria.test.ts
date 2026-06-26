@@ -58,12 +58,24 @@ describe("criteriaToFilters", () => {
       mustHave: ["balcony"],
       niceToHave: ["furnished"],
       relevanceQuery: "near the center",
-      textExclude: [{ label: "ne u prizemlju", terms: ["prizemlje", "prizemlju", "ground floor"] }],
+      textExclude: [
+        { labelHr: "ne u prizemlju", labelEn: "not on the ground floor", terms: ["prizemlje", "prizemlju", "ground floor"] },
+      ],
     });
     // location wish stays semantic, floor exclusion is its own hard filter
     expect(f.relevance).toBe("near the center");
     expect(f.textExclude).toEqual([
-      { label: "ne u prizemlju", terms: ["prizemlje", "prizemlju", "ground floor"] },
+      { labelHr: "ne u prizemlju", labelEn: "not on the ground floor", terms: ["prizemlje", "prizemlju", "ground floor"] },
+    ]);
+  });
+
+  it("falls back to the other language when one label is missing", () => {
+    const f = criteriaToFilters({
+      ...base,
+      textExclude: [{ labelHr: "ne u prizemlju", labelEn: "", terms: ["prizemlje"] }],
+    });
+    expect(f.textExclude).toEqual([
+      { labelHr: "ne u prizemlju", labelEn: "ne u prizemlju", terms: ["prizemlje"] },
     ]);
   });
 
@@ -71,8 +83,8 @@ describe("criteriaToFilters", () => {
     const f = criteriaToFilters({
       ...base,
       textExclude: [
-        { label: "", terms: ["x"] },
-        { label: "bez podruma", terms: ["  "] },
+        { labelHr: "", labelEn: "", terms: ["x"] },
+        { labelHr: "bez podruma", labelEn: "no basement", terms: ["  "] },
       ],
     });
     expect(f.textExclude).toBeUndefined();

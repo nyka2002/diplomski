@@ -61,9 +61,12 @@ export const DEFAULT_SORT: SortOption = "dateNew";
 // A hard textual exclusion produced by the AI agent for a constraint the
 // structured columns/amenities don't capture (most often floor level). A
 // listing is dropped if any of `terms` appears in its title or description
-// (both languages); `label` is the human-readable chip text.
+// (both languages). The chip text is stored in BOTH languages (`labelHr` /
+// `labelEn`) so it re-renders in the page's current language on a language
+// switch, like every other filter chip.
 export interface TextFilter {
-  label: string;
+  labelHr: string;
+  labelEn: string;
   terms: string[];
 }
 

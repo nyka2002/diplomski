@@ -58,9 +58,10 @@ export const CRITERIA_JSON_SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["label", "terms"],
+        required: ["labelHr", "labelEn", "terms"],
         properties: {
-          label: { type: "string" },
+          labelHr: { type: "string" },
+          labelEn: { type: "string" },
           terms: { type: "array", items: { type: "string" } },
         },
       },
@@ -94,9 +95,9 @@ export function buildSystemPrompt(locations: LocationGroup[], lang: Lang): strin
     "Numbers: prices are euros (sale = total price, rent = monthly). Rooms are bedroom counts; 'studio' = 0, 'one-bed' = 1, etc. Use roomsMin/roomsMax for ranges ('2 to 3 rooms' → min 2, max 3; 'exactly 2' → min 2, max 2; '2+' → min 2).",
     "Put fuzzy or descriptive desires that are not concrete filters (e.g. 'near a park', 'quiet', 'renovated', 'great view', 'close to tram', 'near the center') into relevanceQuery for semantic ranking — never invent filters for them.",
     "",
-    "textExclude: hard NEGATIVE constraints that are NOT one of the four amenities and NOT a numeric range — most often a floor level the user rules out (e.g. 'not on the ground floor', 'no basement', 'not the top floor'). Each distinct exclusion is its OWN entry; never merge two into one. For each entry: 'label' is a short phrase in the user's language naming the exclusion (e.g. 'ne u prizemlju'); 'terms' are the lowercase words that would appear in a listing describing the UNWANTED thing, given in BOTH Croatian and English so the free-text description can be matched (e.g. ground floor -> [\"prizemlje\", \"prizemlju\", \"ground floor\"]; basement -> [\"suteren\", \"podrum\", \"basement\"]). A listing is removed if any term appears in its title or description.",
+    "textExclude: hard NEGATIVE constraints that are NOT one of the four amenities and NOT a numeric range — most often a floor level the user rules out (e.g. 'not on the ground floor', 'no basement', 'not the top floor'). Each distinct exclusion is its OWN entry; never merge two into one. For each entry: 'labelHr' is a short Croatian phrase naming the exclusion (e.g. 'ne u prizemlju') and 'labelEn' is the SAME phrase in English (e.g. 'not on the ground floor') — ALWAYS provide both, regardless of the user's language, so the chip can show in whichever language the page is set to; 'terms' are the lowercase words that would appear in a listing describing the UNWANTED thing, given in BOTH Croatian and English so the free-text description can be matched (e.g. ground floor -> [\"prizemlje\", \"prizemlju\", \"ground floor\"]; basement -> [\"suteren\", \"podrum\", \"basement\"]). A listing is removed if any term appears in its title or description.",
     "Keep every constraint atomic and in its own field: a location wish like 'near the center' stays in relevanceQuery, while 'not on the ground floor' is a SEPARATE textExclude entry. Never combine distinct wishes into one relevanceQuery string or one textExclude entry.",
-    "Example: 'dvosoban stan blizu centra, svakako s balkonom, po mogućnosti namješten, ali ne u prizemlju' -> roomsMin 2, roomsMax 2; mustHave [balcony]; niceToHave [furnished]; relevanceQuery 'near the center'; textExclude [{label: 'ne u prizemlju', terms: ['prizemlje','prizemlju','ground floor']}].",
+    "Example: 'dvosoban stan blizu centra, svakako s balkonom, po mogućnosti namješten, ali ne u prizemlju' -> roomsMin 2, roomsMax 2; mustHave [balcony]; niceToHave [furnished]; relevanceQuery 'near the center'; textExclude [{labelHr: 'ne u prizemlju', labelEn: 'not on the ground floor', terms: ['prizemlje','prizemlju','ground floor']}].",
     "",
     "If the user clears or resets, return empty arrays and null scalars.",
     "",
@@ -125,11 +126,18 @@ export function criteriaToFilters(c: AiCriteria): ListingFilters {
   if (c.relevanceQuery) f.relevance = c.relevanceQuery;
   if (c.textExclude?.length) {
     const tx: TextFilter[] = c.textExclude
-      .map((t) => ({
-        label: (t.label ?? "").trim(),
-        terms: (t.terms ?? []).map((s) => (s ?? "").trim()).filter(Boolean),
-      }))
-      .filter((t) => t.label && t.terms.length);
+      .map((t) => {
+        const labelHr = (t.labelHr ?? "").trim();
+        const labelEn = (t.labelEn ?? "").trim();
+        return {
+          // Fall back to the other language if the model omitted one, so a chip
+          // is never blank in either language.
+          labelHr: labelHr || labelEn,
+          labelEn: labelEn || labelHr,
+          terms: (t.terms ?? []).map((s) => (s ?? "").trim()).filter(Boolean),
+        };
+      })
+      .filter((t) => (t.labelHr || t.labelEn) && t.terms.length);
     if (tx.length) f.textExclude = tx;
   }
   return f;

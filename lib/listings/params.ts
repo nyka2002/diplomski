@@ -59,22 +59,26 @@ export function parseListingQuery(sp: URLSearchParams): ListingQuery {
   if (niceToHave.length) q.niceToHave = niceToHave;
   const relevance = sp.get("relevance");
   if (relevance) q.relevance = relevance;
-  // Textual exclusions are JSON-encoded ({label, terms[]}) in repeated `tx` params.
+  // Textual exclusions are JSON-encoded ({labelHr, labelEn, terms[]}) in repeated
+  // `tx` params.
   const textExclude = sp
     .getAll("tx")
     .map((raw) => {
       try {
-        const o = JSON.parse(raw) as { label?: unknown; terms?: unknown };
-        const label = typeof o.label === "string" ? o.label : "";
+        const o = JSON.parse(raw) as { labelHr?: unknown; labelEn?: unknown; terms?: unknown };
+        const labelHr = typeof o.labelHr === "string" ? o.labelHr : "";
+        const labelEn = typeof o.labelEn === "string" ? o.labelEn : "";
         const terms = Array.isArray(o.terms)
           ? o.terms.filter((t): t is string => typeof t === "string")
           : [];
-        return label && terms.length ? { label, terms } : null;
+        return (labelHr || labelEn) && terms.length
+          ? { labelHr: labelHr || labelEn, labelEn: labelEn || labelHr, terms }
+          : null;
       } catch {
         return null;
       }
     })
-    .filter((t): t is { label: string; terms: string[] } => Boolean(t));
+    .filter((t): t is { labelHr: string; labelEn: string; terms: string[] } => Boolean(t));
   if (textExclude.length) q.textExclude = textExclude;
 
   return q;
@@ -112,7 +116,7 @@ export function buildListingSearch(query: ListingQuery): string {
   for (const a of query.niceToHave ?? []) sp.append("nice", a);
   if (query.relevance) sp.set("relevance", query.relevance);
   for (const tx of query.textExclude ?? [])
-    sp.append("tx", JSON.stringify({ label: tx.label, terms: tx.terms }));
+    sp.append("tx", JSON.stringify({ labelHr: tx.labelHr, labelEn: tx.labelEn, terms: tx.terms }));
   if (query.page && query.page > 1) sp.set("page", String(query.page));
   if (query.pageSize) sp.set("pageSize", String(query.pageSize));
   return sp.toString();

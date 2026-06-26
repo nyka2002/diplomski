@@ -24,7 +24,9 @@ describe("listing query <-> search params", () => {
       forbidden: ["pets"],
       niceToHave: ["parking"],
       relevance: "near a park",
-      textExclude: [{ label: "ne u prizemlju", terms: ["prizemlje", "ground floor"] }],
+      textExclude: [
+        { labelHr: "ne u prizemlju", labelEn: "not on the ground floor", terms: ["prizemlje", "ground floor"] },
+      ],
     };
     const round = parseListingQuery(new URLSearchParams(buildListingSearch(q)));
     expect(round).toEqual(q);
@@ -33,13 +35,13 @@ describe("listing query <-> search params", () => {
   it("round-trips multiple textExclude entries and drops malformed tx params", () => {
     const q: ListingQuery = {
       textExclude: [
-        { label: "ne u prizemlju", terms: ["prizemlje", "ground floor"] },
-        { label: "bez podruma", terms: ["podrum", "basement"] },
+        { labelHr: "ne u prizemlju", labelEn: "not on the ground floor", terms: ["prizemlje", "ground floor"] },
+        { labelHr: "bez podruma", labelEn: "no basement", terms: ["podrum", "basement"] },
       ],
     };
     const sp = new URLSearchParams(buildListingSearch(q));
     sp.append("tx", "not-json"); // a malformed entry must be ignored, not throw
-    sp.append("tx", JSON.stringify({ label: "x" })); // missing terms → dropped
+    sp.append("tx", JSON.stringify({ labelHr: "x", labelEn: "x" })); // missing terms → dropped
     const round = parseListingQuery(sp);
     expect(round.textExclude).toEqual(q.textExclude);
     expect(countActiveFilters(round)).toBe(2);

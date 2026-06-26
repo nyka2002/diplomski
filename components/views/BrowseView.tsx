@@ -403,19 +403,25 @@ export default function BrowseView({
       label: `“${filters.relevance}”`,
       onRemove: () => setFilter("relevance", undefined),
     });
-  for (const tx of filters.textExclude ?? [])
+  for (const tx of filters.textExclude ?? []) {
+    // Show the chip in the page's current language; labelEn is the stable,
+    // language-independent identity used for the key and for removal.
+    const txLabel = (lang === "hr" ? tx.labelHr : tx.labelEn) || tx.labelEn || tx.labelHr;
     chips.push({
-      key: `tx:${tx.label}`,
-      label: tx.label,
+      key: `tx:${tx.labelEn || tx.labelHr}`,
+      label: txLabel,
       onRemove: () =>
         setFilters((f) => {
-          const arr = (f.textExclude ?? []).filter((x) => x.label !== tx.label);
+          const arr = (f.textExclude ?? []).filter(
+            (x) => !(x.labelEn === tx.labelEn && x.labelHr === tx.labelHr),
+          );
           const next = { ...f };
           if (arr.length) next.textExclude = arr;
           else delete next.textExclude;
           return next;
         }),
     });
+  }
 
   const handleAiSearch = async () => {
     const text = aiQuery.trim();
