@@ -1,4 +1,4 @@
-import { AMENITY_KEYS, type Amenity, type ListingFilters, type LocationGroup } from "@/lib/listings/types";
+import { AMENITY_KEYS, type Amenity, type ListingFilters, type LocationGroup, type TextFilter } from "@/lib/listings/types";
 import type { Lang } from "@/lib/i18n/translations";
 
 // What the LLM extracts from the conversation. Optionals are nullable (OpenAI
@@ -16,6 +16,7 @@ export interface AiCriteria {
   forbidden: Amenity[]; // amenities that must be absent (hard)
   niceToHave: Amenity[]; // preferred amenities (soft — rank first + flag misses)
   relevanceQuery: string | null; // free-text desires for semantic ranking
+  textExclude: TextFilter[]; // hard textual exclusions (e.g. floor) — each atomic
   reply: string; // a short confirmation in the user's language
 }
 
@@ -36,6 +37,7 @@ export const CRITERIA_JSON_SCHEMA = {
     "forbidden",
     "niceToHave",
     "relevanceQuery",
+    "textExclude",
     "reply",
   ],
   properties: {
@@ -51,6 +53,18 @@ export const CRITERIA_JSON_SCHEMA = {
     forbidden: { type: "array", items: { type: "string", enum: [...AMENITY_KEYS] } },
     niceToHave: { type: "array", items: { type: "string", enum: [...AMENITY_KEYS] } },
     relevanceQuery: { type: ["string", "null"] },
+    textExclude: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["label", "terms"],
+        properties: {
+          label: { type: "string" },
+          terms: { type: "array", items: { type: "string" } },
+        },
+      },
+    },
     reply: { type: "string" },
   },
 } as const;
@@ -78,7 +92,12 @@ export function buildSystemPrompt(locations: LocationGroup[], lang: Lang): strin
     "An amenity must appear in at most one of those lists.",
     "",
     "Numbers: prices are euros (sale = total price, rent = monthly). Rooms are bedroom counts; 'studio' = 0, 'one-bed' = 1, etc. Use roomsMin/roomsMax for ranges ('2 to 3 rooms' → min 2, max 3; 'exactly 2' → min 2, max 2; '2+' → min 2).",
-    "Put fuzzy or descriptive desires that are not concrete filters (e.g. 'near a park', 'quiet', 'renovated', 'great view', 'close to tram') into relevanceQuery for semantic ranking — never invent filters for them.",
+    "Put fuzzy or descriptive desires that are not concrete filters (e.g. 'near a park', 'quiet', 'renovated', 'great view', 'close to tram', 'near the center') into relevanceQuery for semantic ranking — never invent filters for them.",
+    "",
+    "textExclude: hard NEGATIVE constraints that are NOT one of the four amenities and NOT a numeric range — most often a floor level the user rules out (e.g. 'not on the ground floor', 'no basement', 'not the top floor'). Each distinct exclusion is its OWN entry; never merge two into one. For each entry: 'label' is a short phrase in the user's language naming the exclusion (e.g. 'ne u prizemlju'); 'terms' are the lowercase words that would appear in a listing describing the UNWANTED thing, given in BOTH Croatian and English so the free-text description can be matched (e.g. ground floor -> [\"prizemlje\", \"prizemlju\", \"ground floor\"]; basement -> [\"suteren\", \"podrum\", \"basement\"]). A listing is removed if any term appears in its title or description.",
+    "Keep every constraint atomic and in its own field: a location wish like 'near the center' stays in relevanceQuery, while 'not on the ground floor' is a SEPARATE textExclude entry. Never combine distinct wishes into one relevanceQuery string or one textExclude entry.",
+    "Example: 'dvosoban stan blizu centra, svakako s balkonom, po mogućnosti namješten, ali ne u prizemlju' -> roomsMin 2, roomsMax 2; mustHave [balcony]; niceToHave [furnished]; relevanceQuery 'near the center'; textExclude [{label: 'ne u prizemlju', terms: ['prizemlje','prizemlju','ground floor']}].",
+    "",
     "If the user clears or resets, return empty arrays and null scalars.",
     "",
     `Write "reply" as one short, friendly confirmation sentence in ${language}, summarizing what you applied.`,
@@ -104,5 +123,14 @@ export function criteriaToFilters(c: AiCriteria): ListingFilters {
   if (c.forbidden.length) f.forbidden = c.forbidden;
   if (c.niceToHave.length) f.niceToHave = c.niceToHave;
   if (c.relevanceQuery) f.relevance = c.relevanceQuery;
+  if (c.textExclude?.length) {
+    const tx: TextFilter[] = c.textExclude
+      .map((t) => ({
+        label: (t.label ?? "").trim(),
+        terms: (t.terms ?? []).map((s) => (s ?? "").trim()).filter(Boolean),
+      }))
+      .filter((t) => t.label && t.terms.length);
+    if (tx.length) f.textExclude = tx;
+  }
   return f;
 }

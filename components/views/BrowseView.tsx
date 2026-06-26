@@ -403,6 +403,19 @@ export default function BrowseView({
       label: `“${filters.relevance}”`,
       onRemove: () => setFilter("relevance", undefined),
     });
+  for (const tx of filters.textExclude ?? [])
+    chips.push({
+      key: `tx:${tx.label}`,
+      label: tx.label,
+      onRemove: () =>
+        setFilters((f) => {
+          const arr = (f.textExclude ?? []).filter((x) => x.label !== tx.label);
+          const next = { ...f };
+          if (arr.length) next.textExclude = arr;
+          else delete next.textExclude;
+          return next;
+        }),
+    });
 
   const handleAiSearch = async () => {
     const text = aiQuery.trim();

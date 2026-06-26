@@ -58,6 +58,15 @@ export const SORT_OPTIONS = [
 export type SortOption = (typeof SORT_OPTIONS)[number];
 export const DEFAULT_SORT: SortOption = "dateNew";
 
+// A hard textual exclusion produced by the AI agent for a constraint the
+// structured columns/amenities don't capture (most often floor level). A
+// listing is dropped if any of `terms` appears in its title or description
+// (both languages); `label` is the human-readable chip text.
+export interface TextFilter {
+  label: string;
+  terms: string[];
+}
+
 export interface ListingFilters {
   county?: string; // single county, e.g. "Grad Zagreb" (top of the location cascade)
   city?: string; // single city, e.g. "Zagreb"
@@ -80,6 +89,9 @@ export interface ListingFilters {
   forbidden?: Amenity[];
   niceToHave?: Amenity[];
   relevance?: string;
+  // Hard textual exclusions (e.g. floor level) checked against the listing's
+  // title/description in both languages. Each entry is a separate constraint.
+  textExclude?: TextFilter[];
 }
 
 // A city and the neighborhoods that appear under it (derived from listing

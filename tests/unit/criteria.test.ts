@@ -14,6 +14,7 @@ const base: AiCriteria = {
   forbidden: [],
   niceToHave: [],
   relevanceQuery: null,
+  textExclude: [],
   reply: "ok",
 };
 
@@ -47,6 +48,34 @@ describe("criteriaToFilters", () => {
     // overlay amenities must NOT become hard boolean filters
     expect(f.pets).toBeUndefined();
     expect(f.furnished).toBeUndefined();
+  });
+
+  it("maps a floor exclusion to a separate textExclude entry (atomic), keeping the location wish in relevance", () => {
+    const f = criteriaToFilters({
+      ...base,
+      roomsMin: 2,
+      roomsMax: 2,
+      mustHave: ["balcony"],
+      niceToHave: ["furnished"],
+      relevanceQuery: "near the center",
+      textExclude: [{ label: "ne u prizemlju", terms: ["prizemlje", "prizemlju", "ground floor"] }],
+    });
+    // location wish stays semantic, floor exclusion is its own hard filter
+    expect(f.relevance).toBe("near the center");
+    expect(f.textExclude).toEqual([
+      { label: "ne u prizemlju", terms: ["prizemlje", "prizemlju", "ground floor"] },
+    ]);
+  });
+
+  it("drops textExclude entries with no label or no usable terms", () => {
+    const f = criteriaToFilters({
+      ...base,
+      textExclude: [
+        { label: "", terms: ["x"] },
+        { label: "bez podruma", terms: ["  "] },
+      ],
+    });
+    expect(f.textExclude).toBeUndefined();
   });
 
   it("emits an empty filter object when criteria are all empty (a reset)", () => {

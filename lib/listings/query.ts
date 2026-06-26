@@ -45,6 +45,18 @@ const RANK_CANDIDATES = 1000;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ListingQueryBuilder = any;
 
+// Strip characters with special meaning in ILIKE / PostgREST filter values so a
+// model-provided term can be interpolated safely. Keeps letters (any language),
+// digits, spaces and hyphens; bounds the length.
+function sanitizeIlikeTerm(raw: string): string {
+  return String(raw ?? "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N} -]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 40);
+}
+
 // Apply the hard filters (status, type, location, ranges, required + forbidden
 // amenities) shared by every browse/AI query.
 function applyHardFilters(qb: ListingQueryBuilder, query: ListingQuery): ListingQueryBuilder {
@@ -71,6 +83,22 @@ function applyHardFilters(qb: ListingQueryBuilder, query: ListingQuery): Listing
   for (const a of AMENITY_KEYS) if (query[a]) q = q.eq(`attributes->>${a}`, "true");
   // AI "forbidden" → amenity must be absent.
   for (const a of query.forbidden ?? []) q = q.eq(`attributes->>${a}`, "false");
+  // AI textual exclusions: drop listings whose text mentions an unwanted term
+  // (e.g. a floor level) even when it appears only in the free-text description,
+  // not in the structured columns. Checked across title + description (HR + EN);
+  // a listing is excluded if ANY term of an entry matches ANY of those fields.
+  for (const tx of (query.textExclude ?? []).slice(0, 10)) {
+    for (const raw of (tx.terms ?? []).slice(0, 8)) {
+      const term = sanitizeIlikeTerm(raw);
+      if (!term) continue;
+      const like = `%${term}%`;
+      q = q
+        .not("description", "ilike", like)
+        .not("description_hr", "ilike", like)
+        .not("title", "ilike", like)
+        .not("title_hr", "ilike", like);
+    }
+  }
   return q;
 }
 
