@@ -10,9 +10,11 @@ import ListingCard from "@/components/ListingCard";
 export default function HomeView({
   saleListings,
   rentListings,
+  recommended = [],
 }: {
   saleListings: Listing[];
   rentListings: Listing[];
+  recommended?: Listing[];
 }) {
   const { lang, consumeScroll } = useApp();
   const router = useRouter();
@@ -83,6 +85,23 @@ export default function HomeView({
           </div>
         </div>
       </div>
+
+      {/* Recommended for you — personalized (signed-in users with saved/viewed
+          listings). Hidden when empty so anonymous or cold-start visitors just
+          see the newest listings below. */}
+      {recommended.length > 0 && (
+        <section className="mb-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-extrabold text-foreground">{tr.recommendedForYou}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{tr.recommendedSubtitle}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {recommended.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* For Sale */}
       <section className="mb-12">

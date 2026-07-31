@@ -4,6 +4,7 @@ import { AppProvider } from "@/lib/app-context";
 import Header from "@/components/Header";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { fetchSavedIds } from "@/lib/listings/query";
+import { countNewSearchMatches } from "@/lib/searches/query";
 
 export const metadata: Metadata = {
   title: "real estate ad management app",
@@ -14,7 +15,9 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const profile = await getCurrentProfile();
-  const savedIds = profile ? await fetchSavedIds(profile.id) : [];
+  const [savedIds, newSearchCount] = profile
+    ? await Promise.all([fetchSavedIds(profile.id), countNewSearchMatches(profile.id)])
+    : [[], 0];
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -22,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         className="min-h-screen bg-background text-foreground"
         style={{ fontFamily: "'Manrope', sans-serif" }}
       >
-        <AppProvider profile={profile} initialSavedIds={savedIds}>
+        <AppProvider profile={profile} initialSavedIds={savedIds} initialNewSearchCount={newSearchCount}>
           <Header />
           <main>{children}</main>
         </AppProvider>

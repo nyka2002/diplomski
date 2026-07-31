@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { SlidersHorizontal, X, ChevronDown, Sparkles, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { SlidersHorizontal, X, ChevronDown, Sparkles, Search, BookmarkPlus, Check } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { translations } from "@/lib/i18n/translations";
 import type { Listing, ListingFilters, LocationGroup, SortOption } from "@/lib/listings/types";
 import { SORT_OPTIONS, DEFAULT_SORT } from "@/lib/listings/types";
 import { buildListingSearch, countActiveFilters } from "@/lib/listings/params";
 import { criteriaToFilters } from "@/lib/ai/criteria";
+import { saveSearchAction } from "@/lib/searches/actions";
 import ListingCard from "@/components/ListingCard";
 import AiChatPanel from "@/components/AiChatPanel";
 import SelectDropdown from "@/components/SelectDropdown";
@@ -114,13 +115,16 @@ function CheckboxDropdown({
 export default function BrowseView({
   type,
   locations,
+  recommended = [],
 }: {
   type: "sale" | "rent";
   locations: LocationGroup[];
+  recommended?: Listing[];
 }) {
-  const { lang, getBrowseSnapshot, setBrowseSnapshot, consumeScroll } = useApp();
+  const { lang, getBrowseSnapshot, setBrowseSnapshot, consumeScroll, isLoggedIn } = useApp();
   const tr = translations[lang];
   const pathname = usePathname();
+  const router = useRouter();
 
   // Restore any browse state left from before navigating into a listing.
   const restored = useRef(getBrowseSnapshot(type)).current;
@@ -161,6 +165,46 @@ export default function BrowseView({
   // desktop and one card tall on mobile.
   const gridRef = useRef<HTMLDivElement>(null);
   const [cardH, setCardH] = useState(0);
+
+  // Save-this-search popover (name input + persist).
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "done">("idle");
+  const saveRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (saveRef.current && !saveRef.current.contains(e.target as Node)) setSaveOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+  // A sensible default name from the current filters (city, else the type).
+  const defaultSearchName = () => {
+    const parts = [type === "rent" ? tr.nav.rent : tr.nav.buy];
+    if (filters.city) parts.push(filters.city);
+    if (filters.priceMax != null) parts.push(`≤ ${filters.priceMax} €`);
+    return parts.join(" · ");
+  };
+  const openSave = () => {
+    if (!isLoggedIn) {
+      router.push("/sign-in");
+      return;
+    }
+    setSaveName(defaultSearchName());
+    setSaveStatus("idle");
+    setSaveOpen(true);
+  };
+  const submitSave = async () => {
+    setSaveStatus("saving");
+    const res = await saveSearchAction(saveName, { ...filters, type, sort });
+    if (res.ok) {
+      setSaveStatus("done");
+      router.refresh(); // refresh the header badge / saved-searches list
+      setTimeout(() => setSaveOpen(false), 900);
+    } else {
+      setSaveStatus("idle");
+    }
+  };
 
   const filterKey = useMemo(() => buildListingSearch({ ...filters }), [filters]);
 
@@ -250,21 +294,29 @@ export default function BrowseView({
   // ── Location: county → city → neighborhoods cascade ─────────────────────────
   // Counties (top of the cascade), then the cities within the chosen county,
   // then the neighborhoods within the chosen city.
+  // Croatian collation so č/ć/š/ž/đ sort correctly (not after "z").
+  const hr = useMemo(() => new Intl.Collator("hr"), []);
+
   const counties = useMemo(() => {
     const seen = new Set<string>();
     return locations
       .map((l) => l.county)
-      .filter((c) => c && !seen.has(c) && seen.add(c));
-  }, [locations]);
+      .filter((c) => c && !seen.has(c) && seen.add(c))
+      .sort((a, b) => hr.compare(a, b));
+  }, [locations, hr]);
 
   const cityGroups = useMemo(
     () => locations.filter((l) => !filters.county || l.county === filters.county),
     [locations, filters.county],
   );
+  // Cities alphabetical by city name — independent of county, so a flat city
+  // list (no county chosen) is not ordered by county.
   const cityOptions = useMemo(() => {
     const seen = new Set<string>();
-    return cityGroups.filter((l) => !seen.has(l.city) && seen.add(l.city));
-  }, [cityGroups]);
+    return cityGroups
+      .filter((l) => !seen.has(l.city) && seen.add(l.city))
+      .sort((a, b) => hr.compare(a.city, b.city));
+  }, [cityGroups, hr]);
 
   const selectedGroup = cityGroups.find((l) => l.city === filters.city);
   const neighborhoodOptions = selectedGroup?.neighborhoods ?? [];
@@ -516,6 +568,24 @@ export default function BrowseView({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      {/* Personalized recommendations — first row for signed-in users (type-
+          scoped: sale on /buy, rent on /rent). Hidden when empty (anonymous or
+          cold start). Sits above the browse controls and is separate from the
+          measured results grid, so it doesn't affect the AI panel sizing. */}
+      {recommended.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-4">
+            <h2 className="text-xl font-extrabold text-foreground">{tr.recommendedForYou}</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">{tr.recommendedSubtitle}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            {recommended.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Sort + filter toggle bar */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <SlidersHorizontal size={15} className="text-muted-foreground shrink-0" />
@@ -535,6 +605,47 @@ export default function BrowseView({
           </button>
         ))}
         <div className="ml-auto flex items-center gap-2">
+          {/* Save this search (filters + type) to be notified about new matches. */}
+          <div className="relative" ref={saveRef}>
+            <button
+              onClick={openSave}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-foreground hover:bg-muted transition-colors"
+            >
+              <BookmarkPlus size={13} />
+              <span className="hidden sm:inline">{tr.savedSearches.save}</span>
+            </button>
+            {saveOpen && (
+              <div className="absolute right-0 top-full mt-2 z-20 w-64 bg-card rounded-xl border border-border shadow-lg p-3">
+                {saveStatus === "done" ? (
+                  <p className="flex items-center gap-2 text-sm text-foreground py-1">
+                    <Check size={15} className="text-emerald-500" /> {tr.savedSearches.savedNotice}
+                  </p>
+                ) : (
+                  <>
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                      {tr.savedSearches.nameLabel}
+                    </label>
+                    <input
+                      value={saveName}
+                      onChange={(e) => setSaveName(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && submitSave()}
+                      autoFocus
+                      maxLength={80}
+                      className={inputCls}
+                    />
+                    <button
+                      onClick={submitSave}
+                      disabled={saveStatus === "saving"}
+                      className="mt-2.5 w-full py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                      style={{ background: "linear-gradient(135deg, #7B6FC4, #C084A0)" }}
+                    >
+                      {saveStatus === "saving" ? tr.savedSearches.saving : tr.savedSearches.save}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setAiOpen((o) => !o)}
             className="lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border border-border text-foreground hover:bg-muted transition-colors"

@@ -1,14 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { extractCriteria, isOpenAIConfigured, type ChatMessage } from "@/lib/ai/openai";
+import { extractCriteria, isOpenAIConfigured, CHAT_MODEL, type ChatMessage } from "@/lib/ai/openai";
 import { withinLlmBudget } from "@/lib/ai/budget";
 import { fetchLocations } from "@/lib/listings/query";
+import { recordSearchAction } from "@/lib/analytics/actions";
 import type { Lang } from "@/lib/i18n/translations";
 
 // ── Guardrails (per-instance, in-memory) ────────────────────────────────────
 const MAX_MESSAGES = 12; // only the most recent turns are sent to the model
 const MAX_CONTENT = 1000; // chars per message
-const RL_MAX = 20; // requests
+const RL_MAX = Number(process.env.AI_RATE_LIMIT_MAX ?? 20); // requests (raise for eval runs)
 const RL_WINDOW_MS = 5 * 60 * 1000; // per 5 minutes per IP
 const CACHE_TTL_MS = 10 * 60 * 1000;
 
@@ -33,12 +34,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "rateLimited" }, { status: 429 });
   }
 
-  let body: { messages?: ChatMessage[]; lang?: Lang; sessionId?: string; type?: "sale" | "rent" };
+  let body: {
+    messages?: ChatMessage[];
+    lang?: Lang;
+    sessionId?: string;
+    type?: "sale" | "rent";
+    model?: string;
+  };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "badRequest" }, { status: 400 });
   }
+
+  // Model comparison (phase 11): a request may pick a model ONLY if it is on the
+  // AI_MODEL_ALLOWLIST env allowlist (comma-separated). Anything else — and the
+  // default with no allowlist set — uses the configured CHAT_MODEL, so the public
+  // endpoint can't be pushed onto an arbitrary (costly) model.
+  const allowlist = (process.env.AI_MODEL_ALLOWLIST || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const model =
+    typeof body.model === "string" && allowlist.includes(body.model) ? body.model : CHAT_MODEL;
 
   const lang: Lang = body.lang === "hr" ? "hr" : "en";
   const type = body.type === "sale" || body.type === "rent" ? body.type : undefined;
@@ -52,7 +70,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Cache identical conversations to bound OpenAI spend.
-  const cacheKey = `${lang}:${type ?? "all"}:${JSON.stringify(messages)}`;
+  // Model is part of the key so comparing models never returns another model's
+  // cached answer (the cache was previously model-blind).
+  const cacheKey = `${model}:${lang}:${type ?? "all"}:${JSON.stringify(messages)}`;
   const hit = cache.get(cacheKey);
   if (hit && hit.expires > Date.now()) {
     return NextResponse.json(hit.value);
@@ -67,12 +87,16 @@ export async function POST(request: NextRequest) {
   let criteria;
   try {
     const locations = await fetchLocations(type);
-    criteria = await extractCriteria(messages, locations, lang);
+    criteria = await extractCriteria(messages, locations, lang, { model });
   } catch (e) {
     console.error("AI extract error:", e instanceof Error ? e.message : e);
     return NextResponse.json({ error: "aiError" }, { status: 502 });
   }
   if (!criteria) return NextResponse.json({ configured: false });
+
+  // Best-effort: log the intentional search as a criteria snapshot. Anonymous
+  // visitors are allowed (user_id = null); the action swallows every error.
+  await recordSearchAction(criteria);
 
   // Best-effort: persist the turn for signed-in users (conversation memory).
   let sessionId = body.sessionId;
@@ -112,7 +136,7 @@ export async function POST(request: NextRequest) {
     // logging is non-critical — never fail the request because of it
   }
 
-  const value = { configured: true, criteria, reply: criteria.reply, sessionId };
+  const value = { configured: true, criteria, reply: criteria.reply, sessionId, model };
   cache.set(cacheKey, { value, expires: Date.now() + CACHE_TTL_MS });
   return NextResponse.json(value);
 }

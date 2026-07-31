@@ -4,12 +4,23 @@ import { useApp } from "@/lib/app-context";
 import { translations } from "@/lib/i18n/translations";
 import type { Listing } from "@/lib/data/listings";
 import HeartButton from "@/components/HeartButton";
+import { BedDouble, Ruler, Car, Sofa, PawPrint, Trees, MapPin } from "lucide-react";
+
+// Amenity → icon. Order matches the amenity list below so the icon row is stable.
+const AMENITY_ICON = { balcony: Trees, parking: Car, furnished: Sofa, pets: PawPrint } as const;
+const AMENITY_ORDER = ["balcony", "parking", "furnished", "pets"] as const;
 
 export default function ListingCard({ listing }: { listing: Listing }) {
   const { lang, savedIds, toggleSaved, openListing } = useApp();
   const tr = translations[lang];
   const saved = savedIds.has(listing.id);
   const title = lang === "en" ? listing.title : listing.titleHr;
+
+  // Location hierarchy: the stored string is "City, Neighborhood"; show the city
+  // with emphasis and the neighborhood muted.
+  const [city, ...restLoc] = (listing.location ?? "").split(", ");
+  const neighborhood = restLoc.join(", ");
+  const amenities = AMENITY_ORDER.filter((a) => listing.attributes[a]);
 
   return (
     <div
@@ -52,11 +63,39 @@ export default function ListingCard({ listing }: { listing: Listing }) {
         </div>
       </div>
       <div className="p-4">
-        <p className="text-xs text-muted-foreground mb-1">{listing.location}</p>
-        <h3 className="font-bold text-foreground text-sm leading-snug mb-2 line-clamp-2">
-          {title}
-        </h3>
-        <p className="font-extrabold text-base" style={{ color: "var(--primary)" }}>
+        {/* Location — city emphasized, neighborhood muted. */}
+        <p className="flex items-center gap-1 text-xs mb-1 min-w-0">
+          <MapPin size={12} className="shrink-0 text-muted-foreground" />
+          <span className="truncate">
+            <span className="text-foreground/80 font-medium">{city}</span>
+            {neighborhood && <span className="text-muted-foreground">, {neighborhood}</span>}
+          </span>
+        </p>
+        <h3 className="font-bold text-foreground text-sm leading-snug mb-2 line-clamp-2">{title}</h3>
+        {/* Key facts on one line (fixed height): rooms · area · amenity icons. */}
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+          <span className="inline-flex items-center gap-1" title={tr.filters.rooms}>
+            <BedDouble size={14} className="shrink-0" />
+            {listing.rooms > 0 ? listing.rooms : tr.listing.studio}
+          </span>
+          <span className="inline-flex items-center gap-1" title={tr.filters.area}>
+            <Ruler size={14} className="shrink-0" />
+            {listing.areaM2} m²
+          </span>
+          {amenities.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 ml-auto shrink-0">
+              {amenities.map((a) => {
+                const Icon = AMENITY_ICON[a];
+                return (
+                  <span key={a} title={tr.filters[a]} aria-label={tr.filters[a]} className="inline-flex">
+                    <Icon size={14} className="shrink-0 text-primary/70" />
+                  </span>
+                );
+              })}
+            </span>
+          )}
+        </div>
+        <p className="font-extrabold text-lg leading-none" style={{ color: "var(--primary)" }}>
           {listing.price}
         </p>
         {/* AI nice-to-have misses — this listing was kept but flagged. */}

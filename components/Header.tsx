@@ -8,7 +8,8 @@ import { useApp } from "@/lib/app-context";
 import { translations } from "@/lib/i18n/translations";
 
 export default function Header() {
-  const { lang, toggleLang, dark, toggleDark, isLoggedIn, requestSignOut, profile } = useApp();
+  const { lang, toggleLang, dark, toggleDark, isLoggedIn, requestSignOut, profile, newSearchCount } =
+    useApp();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const tr = translations[lang];
@@ -17,7 +18,13 @@ export default function Header() {
     { href: "/", label: tr.nav.home },
     { href: "/buy", label: tr.nav.buy },
     { href: "/rent", label: tr.nav.rent },
-    ...(isLoggedIn ? [{ href: "/saved", label: tr.nav.saved }] : []),
+    ...(isLoggedIn
+      ? [
+          { href: "/saved", label: tr.nav.saved },
+          { href: "/saved-searches", label: tr.nav.savedSearches, badge: newSearchCount },
+          { href: "/compare", label: tr.nav.compare },
+        ]
+      : []),
     ...(profile?.role === "admin" ? [{ href: "/admin", label: tr.nav.admin }] : []),
   ];
 
@@ -39,11 +46,11 @@ export default function Header() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-          {navItems.map(({ href, label }) => (
+          {navItems.map(({ href, label, badge }) => (
             <Link
               key={href}
               href={href}
-              className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+              className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                 pathname === href
                   ? "text-purple-700 dark:text-purple-300"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -51,6 +58,11 @@ export default function Header() {
               style={pathname === href ? { background: "rgba(123,111,196,0.12)" } : {}}
             >
               {label}
+              {typeof badge === "number" && badge > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white align-middle bg-gradient-to-br from-[#7B6FC4] to-[#C084A0]">
+                  {badge > 99 ? "99+" : badge}
+                </span>
+              )}
             </Link>
           ))}
         </nav>
@@ -151,14 +163,19 @@ export default function Header() {
                   { href: "/sign-in", label: tr.nav.signin },
                   { href: "/register", label: tr.nav.register },
                 ]),
-          ].map(({ href, label }) => (
+          ].map(({ href, label, ...rest }) => (
             <Link
               key={href}
               href={href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="flex items-center gap-2 w-full text-left px-4 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
               {label}
+              {"badge" in rest && typeof rest.badge === "number" && rest.badge > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white bg-gradient-to-br from-[#7B6FC4] to-[#C084A0]">
+                  {rest.badge > 99 ? "99+" : rest.badge}
+                </span>
+              )}
             </Link>
           ))}
           {isLoggedIn && (

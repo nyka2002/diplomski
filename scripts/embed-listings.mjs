@@ -10,8 +10,13 @@
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const openaiKey = process.env.OPENAI_API_KEY;
+const openaiKey = process.env.AI_API_KEY || process.env.OPENAI_API_KEY;
 const force = process.argv.includes("--force");
+// Configurable embedding model / endpoint (phase 10), same defaults as the app.
+// WARNING: a model with a dimension other than 1536 won't fit the production
+// vector(1536) column — only change these for an offline/experimental store.
+const embedBaseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
+const embedModel = process.env.AI_EMBED_MODEL || "text-embedding-3-small";
 
 if (!url || !serviceKey || !openaiKey) {
   console.error(
@@ -48,12 +53,12 @@ function listingText(l) {
 }
 
 async function embed(text) {
-  const res = await fetch("https://api.openai.com/v1/embeddings", {
+  const res = await fetch(`${embedBaseUrl}/embeddings`, {
     method: "POST",
     headers: { Authorization: `Bearer ${openaiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+    body: JSON.stringify({ model: embedModel, input: text }),
   });
-  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`embeddings ${res.status}: ${await res.text()}`);
   const data = await res.json();
   return data.data[0].embedding;
 }

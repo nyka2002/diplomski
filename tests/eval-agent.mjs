@@ -53,15 +53,17 @@ const CASES = [
     turns: ["dvosoban stan s balkonom, mora dopuštati ljubimce"],
     gold: { roomsMin: 2, roomsMax: 2, mustHave: ["balcony", "pets"] } },
 
-  // City extraction — uses cities that actually exist in the catalog for the
-  // given type (sale: "Sesvete", rent: "Trnje"). Adjust if your data differs.
+  // City extraction — Zagreb is one city; its districts (Sesvete, Trnje, …) are
+  // neighborhoods of "Zagreb". So naming a district yields city "Zagreb" + that
+  // neighborhood. Uses districts that exist for the given type (sale: "Sesvete",
+  // rent: "Trnje"). Adjust if your data differs.
   { id: "en-city-sale", lang: "en", type: "sale",
     turns: ["an apartment in Sesvete"],
-    gold: { city: "Sesvete" } },
+    gold: { city: "Zagreb", neighborhoods: ["Sesvete"] } },
 
   { id: "hr-city-rent", lang: "hr", type: "rent",
     turns: ["stan u Trnju"],
-    gold: { city: "Trnje" } },
+    gold: { city: "Zagreb", neighborhoods: ["Trnje"] } },
 
   { id: "en-ranges", lang: "en", type: "sale",
     turns: ["an apartment up to 200000 euros, at least 50 m2"],
@@ -112,36 +114,88 @@ const CASES = [
       "i ne u prizemlju",
     ],
     gold: { priceMax: 150000, mustHave: ["furnished"], textExclude: [["prizemlj", "ground floor"]] } },
+
+  // ── Expanded set (phase 11) ────────────────────────────────────────────────
+  // Room counts (a plain "N-room" is an exact count).
+  { id: "en-onebed", lang: "en", type: "rent",
+    turns: ["a one-bedroom apartment"], gold: { roomsMin: 1, roomsMax: 1 } },
+  { id: "hr-jednosoban", lang: "hr", type: "rent",
+    turns: ["jednosoban stan"], gold: { roomsMin: 1, roomsMax: 1 } },
+  { id: "en-threebed", lang: "en", type: "sale",
+    turns: ["a three-bedroom apartment"], gold: { roomsMin: 3, roomsMax: 3 } },
+  { id: "hr-trosoban", lang: "hr", type: "sale",
+    turns: ["trosoban stan"], gold: { roomsMin: 3, roomsMax: 3 } },
+  { id: "en-atleast3", lang: "en", type: "sale",
+    turns: ["an apartment with at least three bedrooms"], gold: { roomsMin: 3 } },
+  { id: "hr-najmanje3", lang: "hr", type: "rent",
+    turns: ["stan s barem tri sobe"], gold: { roomsMin: 3 } },
+
+  // Price / area ranges.
+  { id: "en-price-min", lang: "en", type: "sale",
+    turns: ["apartments over 100000 euros"], gold: { priceMin: 100000 } },
+  { id: "hr-price-between", lang: "hr", type: "sale",
+    turns: ["stan između 100000 i 150000 eura"], gold: { priceMin: 100000, priceMax: 150000 } },
+  { id: "en-area-max", lang: "en", type: "rent",
+    turns: ["an apartment up to 80 m2"], gold: { areaMax: 80 } },
+  { id: "hr-area-between", lang: "hr", type: "sale",
+    turns: ["stan između 40 i 60 kvadrata"], gold: { areaMin: 40, areaMax: 60 } },
+
+  // Required amenity combinations.
+  { id: "en-balcony-parking", lang: "en", type: "sale",
+    turns: ["an apartment with a balcony and parking"], gold: { mustHave: ["balcony", "parking"] } },
+  { id: "hr-namjesten-parking", lang: "hr", type: "rent",
+    turns: ["namješten stan s parkingom"], gold: { mustHave: ["furnished", "parking"] } },
+
+  // Soft (nice-to-have) when explicitly softened — mirrors the phase-5 rule.
+  { id: "en-nice-furnished", lang: "en", type: "rent",
+    turns: ["an apartment, ideally furnished"], gold: { niceToHave: ["furnished"] } },
+  { id: "hr-nice-balcony", lang: "hr", type: "rent",
+    turns: ["stan, po mogućnosti s balkonom"], gold: { niceToHave: ["balcony"] } },
+
+  // Textual exclusion — top / last floor.
+  { id: "en-no-topfloor", lang: "en", type: "sale",
+    turns: ["an apartment, not on the top floor"],
+    gold: { textExclude: [["top floor", "last floor", "zadnji kat", "potkrovlj"]] } },
+
+  // Multi-turn: change a previously stated value.
+  { id: "en-multiturn-price-change", lang: "en", type: "sale",
+    turns: ["an apartment up to 100000 euros", "actually make it up to 150000"],
+    gold: { priceMax: 150000 } },
+  { id: "hr-multiturn-add-parking", lang: "hr", type: "rent",
+    turns: ["dvosoban stan", "dodaj i parking"],
+    gold: { roomsMin: 2, roomsMax: 2, mustHave: ["parking"] } },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const norm = (v) => (v === undefined ? null : v);
 const setEq = (a = [], b = []) => a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
 
-async function postAi(messages, lang, type, tries = 3) {
+async function postAi(messages, lang, type, model, tries = 3) {
   const res = await fetch(`${BASE_URL}/api/ai`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, lang, type }),
+    // `model` is honored by the server only if it is on its AI_MODEL_ALLOWLIST;
+    // otherwise the configured default model is used (see app/api/ai/route.ts).
+    body: JSON.stringify({ messages, lang, type, ...(model ? { model } : {}) }),
   });
   if (res.status === 429 && tries > 0) {
     console.log("    (rate limited — waiting 60 s)");
     await sleep(60000);
-    return postAi(messages, lang, type, tries - 1);
+    return postAi(messages, lang, type, model, tries - 1);
   }
   if (!res.ok) throw new Error(`/api/ai ${res.status}`);
   const data = await res.json();
   if (data.configured === false) throw new Error("OpenAI not configured on the server");
-  return data; // { criteria, reply, ... }
+  return data; // { criteria, reply, model, ... }
 }
 
 // Run a (possibly multi-turn) conversation, returning the final extracted criteria.
-async function runConversation(turns, lang, type) {
+async function runConversation(turns, lang, type, model) {
   const messages = [];
   let criteria = null;
   for (const userText of turns) {
     messages.push({ role: "user", content: userText });
-    const data = await postAi(messages, lang, type);
+    const data = await postAi(messages, lang, type, model);
     criteria = data.criteria;
     messages.push({ role: "assistant", content: data.reply ?? "" });
     await sleep(DELAY_MS);
@@ -235,20 +289,21 @@ function checkRanking(c, listings) {
   return { pairs: unmet.length - 1, ordered: ok, monotonic: ok === unmet.length - 1 };
 }
 
-// ── Main ─────────────────────────────────────────────────────────────────────
-async function main() {
-  console.log(`Evaluating agent at ${BASE_URL}\n`);
+// ── One evaluation suite (a single model) ────────────────────────────────────
+async function runSuite(model) {
+  console.log(`\nEvaluating agent at ${BASE_URL}  (model: ${model || "server default"})\n`);
   const fieldTally = {}; // field → { correct, total }
   let casesAllCorrect = 0;
   let totalListings = 0, totalViolating = 0;
   const rankResults = [];
   const multiturn = [];
+  const perCase = []; // per-case outcomes for paired statistics (phase 12)
 
   for (const tc of CASES) {
     console.log(`▶ ${tc.id} (${tc.lang}, ${tc.type})`);
     let criteria;
     try {
-      criteria = await runConversation(tc.turns, tc.lang, tc.type);
+      criteria = await runConversation(tc.turns, tc.lang, tc.type, model);
     } catch (e) {
       console.log(`   ERROR: ${e.message}\n`);
       continue;
@@ -261,6 +316,7 @@ async function main() {
       if (ok) fieldTally[name].correct++;
     }
     if (ext.allCorrect) casesAllCorrect++;
+    perCase.push({ id: tc.id, lang: tc.lang, type: tc.type, allCorrect: ext.allCorrect, fields: ext.fields, extras: ext.extras });
     const wrong = Object.entries(ext.fields).filter(([, ok]) => !ok).map(([n]) => n);
     console.log(`   extraction: ${ext.allCorrect ? "ALL OK" : "wrong: " + wrong.join(", ")}` +
       (ext.extras.length ? ` | hallucinated: ${ext.extras.join(", ")}` : ""));
@@ -288,10 +344,13 @@ async function main() {
 
   // ── Summary ────────────────────────────────────────────────────────────────
   console.log("════════════════════ SUMMARY ════════════════════");
+  console.log(`model: ${model || "server default"}`);
   console.log("\n1) Criteria-extraction accuracy (per field):");
   let cTot = 0, cOk = 0;
+  const perField = {};
   for (const [name, { correct, total }] of Object.entries(fieldTally).sort()) {
     cTot += total; cOk += correct;
+    perField[name] = { correct, total };
     console.log(`   ${name.padEnd(14)} ${correct}/${total}  (${((correct / total) * 100).toFixed(0)} %)`);
   }
   console.log(`   ${"OVERALL".padEnd(14)} ${cOk}/${cTot}  (${((cOk / cTot) * 100).toFixed(1)} %)`);
@@ -301,26 +360,66 @@ async function main() {
   console.log(`   ${totalViolating} violating listing(s) out of ${totalListings} returned` +
     `  (${totalListings ? (100 - (totalViolating / totalListings) * 100).toFixed(1) : "—"} % clean)`);
 
+  const pairs = rankResults.reduce((s, r) => s + r.pairs, 0);
+  const ord = rankResults.reduce((s, r) => s + r.ordered, 0);
+  const mono = rankResults.filter((r) => r.monotonic).length;
   console.log("\n3) Soft-ranking correctness (nice-to-have ordering):");
   if (rankResults.length) {
-    const pairs = rankResults.reduce((s, r) => s + r.pairs, 0);
-    const ord = rankResults.reduce((s, r) => s + r.ordered, 0);
-    const mono = rankResults.filter((r) => r.monotonic).length;
     console.log(`   ${ord}/${pairs} adjacent pairs correctly ordered  (${((ord / pairs) * 100).toFixed(1)} %)`);
     console.log(`   fully monotonic result lists: ${mono}/${rankResults.length}`);
   } else {
     console.log("   (no ranked cases produced ≥2 listings)");
   }
 
+  const mtOk = multiturn.filter((m) => m.ok).length;
   console.log("\n4) Multi-turn behavior (final criteria correct):");
   if (multiturn.length) {
-    const ok = multiturn.filter((m) => m.ok).length;
-    console.log(`   ${ok}/${multiturn.length} conversations ended with fully-correct criteria`);
+    console.log(`   ${mtOk}/${multiturn.length} conversations ended with fully-correct criteria`);
     for (const m of multiturn) console.log(`     ${m.ok ? "✓" : "✗"} ${m.id}`);
   } else {
     console.log("   (no multi-turn cases)");
   }
   console.log("\n══════════════════════════════════════════════════");
+
+  return {
+    model: model || "server-default",
+    caseCount: CASES.length,
+    perCase, // [{ id, lang, type, allCorrect, fields, extras }] — for paired tests
+    extraction: {
+      perField,
+      overall: { correct: cOk, total: cTot, pct: cTot ? cOk / cTot : 0 },
+      fullyCorrect: casesAllCorrect,
+    },
+    compliance: {
+      listings: totalListings,
+      violating: totalViolating,
+      cleanPct: totalListings ? 1 - totalViolating / totalListings : null,
+    },
+    ranking: { pairs, ordered: ord, orderedPct: pairs ? ord / pairs : null, monotonic: mono, rankedCases: rankResults.length },
+    multiturn: { total: multiturn.length, fullyCorrect: mtOk, cases: multiturn },
+  };
+}
+
+// ── Main: optionally loop several models, optionally write JSON ───────────────
+async function main() {
+  // MODELS="gpt-4o-mini,other-model" compares models (each must be on the
+  // server's AI_MODEL_ALLOWLIST). Unset → a single run with the server default.
+  const models = (process.env.MODELS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const outIdx = process.argv.indexOf("--out");
+  const outFile = outIdx >= 0 ? process.argv[outIdx + 1] : process.env.EVAL_OUT || null;
+
+  const runs = [];
+  if (models.length === 0) {
+    runs.push(await runSuite(undefined));
+  } else {
+    for (const m of models) runs.push(await runSuite(m));
+  }
+
+  if (outFile) {
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(outFile, JSON.stringify({ baseUrl: BASE_URL, runs }, null, 2));
+    console.log(`\nWrote ${outFile}`);
+  }
 }
 
 main().catch((e) => {

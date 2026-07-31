@@ -5,7 +5,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./env";
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
 // Routes that require an authenticated session.
-const PROTECTED_PREFIXES = ["/saved", "/account", "/admin"];
+const PROTECTED_PREFIXES = ["/saved", "/saved-searches", "/compare", "/account", "/admin"];
 
 // Refreshes the auth session cookie on every request and enforces route
 // protection at the edge (a logged-out visitor never even renders /account).

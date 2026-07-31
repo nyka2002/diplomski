@@ -1,0 +1,390 @@
+{
+  "topN": 6,
+  "queries": 8,
+  "order": [
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 1,
+      "listingId": "index-7408426"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 2,
+      "listingId": "oglasnik-3640910"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 3,
+      "listingId": "index-7408651"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 4,
+      "listingId": "njuskalo-50757570"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 5,
+      "listingId": "index-7408662"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
+      "rank": 6,
+      "listingId": "njuskalo-47984441"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 1,
+      "listingId": "index-7438682"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 2,
+      "listingId": "njuskalo-44443000"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 3,
+      "listingId": "njuskalo-50850527"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 4,
+      "listingId": "njuskalo-50705021"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 5,
+      "listingId": "oglasnik-7038537"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
+      "rank": 6,
+      "listingId": "njuskalo-50298402"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 1,
+      "listingId": "oglasnik-7091584"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 2,
+      "listingId": "njuskalo-50510983"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 3,
+      "listingId": "index-7408651"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 4,
+      "listingId": "index-6215082"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 5,
+      "listingId": "oglasnik-7091613"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 6,
+      "listingId": "oglasnik-7067822"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 1,
+      "listingId": "njuskalo-49417078"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 2,
+      "listingId": "njuskalo-49035616"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 3,
+      "listingId": "index-7408138"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 4,
+      "listingId": "index-6224464"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 5,
+      "listingId": "oglasnik-7090441"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 6,
+      "listingId": "njuskalo-48093863"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 1,
+      "listingId": "njuskalo-50831181"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 2,
+      "listingId": "njuskalo-50907224"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 3,
+      "listingId": "index-7245767"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 4,
+      "listingId": "index-6215082"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 5,
+      "listingId": "njuskalo-50855095"
+    },
+    {
+      "q": 5,
+      "query": "svijetao miran stan blizu parka",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 6,
+      "listingId": "njuskalo-50759093"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 1,
+      "listingId": "njuskalo-45392819"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 2,
+      "listingId": "njuskalo-50653440"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 3,
+      "listingId": "njuskalo-50687533"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 4,
+      "listingId": "njuskalo-48877596"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 5,
+      "listingId": "njuskalo-46464909"
+    },
+    {
+      "q": 6,
+      "query": "moderno uređen stan u centru grada",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 6,
+      "listingId": "njuskalo-50705366"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 1,
+      "listingId": "njuskalo-50831180"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 2,
+      "listingId": "index-6215082"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 3,
+      "listingId": "njuskalo-41757538"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 4,
+      "listingId": "oglasnik-7091583"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 5,
+      "listingId": "njuskalo-49444859"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 6,
+      "listingId": "njuskalo-50907224"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 1,
+      "listingId": "index-6207798"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 2,
+      "listingId": "njuskalo-50850187"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 3,
+      "listingId": "index-7243065"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 4,
+      "listingId": "njuskalo-39209960"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 5,
+      "listingId": "index-7266103"
+    },
+    {
+      "q": 8,
+      "query": "ugodan stan s lijepim pogledom",
+      "lang": "hr",
+      "type": "sale",
+      "rank": 6,
+      "listingId": "index-7255481"
+    }
+  ]
+}

@@ -11,6 +11,10 @@
     "test:e2e": "node tests/smoke.mjs",
     "test:unit": "vitest run",
     "test:scrapers": "node tests/scrapers.test.mjs",
+    "test:dedup": "node tests/dedup.test.mjs",
+    "eval:agent": "node tests/eval-agent.mjs",
+    "eval:recommend": "node scripts/eval-recommendations.mjs",
+    "eval:stats": "node scripts/eval-stats.mjs",
     "scrape": "node scrapers/run.mjs",
     "scrape:queue": "node scrapers/run.mjs --from-queue",
     "translate": "node scripts/translate-listings.mjs"

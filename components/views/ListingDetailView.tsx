@@ -2,14 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, ExternalLink, Phone, Mail, Building2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Phone, Mail, Building2, GitCompare } from "lucide-react";
 import { useApp } from "@/lib/app-context";
 import { translations, lowercasePreservingAcronyms } from "@/lib/i18n/translations";
 import type { Listing } from "@/lib/data/listings";
 import HeartButton from "@/components/HeartButton";
+import ListingCard from "@/components/ListingCard";
+import { recordListingViewAction } from "@/lib/analytics/actions";
 
-export default function ListingDetailView({ listing }: { listing: Listing }) {
-  const { lang, savedIds, toggleSaved, listingOrigin } = useApp();
+export default function ListingDetailView({
+  listing,
+  similar = [],
+}: {
+  listing: Listing;
+  similar?: Listing[];
+}) {
+  const { lang, savedIds, toggleSaved, listingOrigin, isLoggedIn } = useApp();
   const router = useRouter();
   const tr = translations[lang];
   const [idx, setIdx] = useState(0);
@@ -17,6 +25,12 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
+  }, [listing.id]);
+
+  // Best-effort implicit view signal (feeds recommendations). Fire-and-forget;
+  // the server action swallows every error and never blocks the page.
+  useEffect(() => {
+    void recordListingViewAction(listing.id);
   }, [listing.id]);
 
   // The whole property detail renders in lowercase (matching the app's
@@ -68,9 +82,22 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
         />
       </div>
       <p className="text-sm text-muted-foreground mb-2">{listing.location}</p>
-      <p className="text-2xl font-extrabold mb-8" style={{ color: "var(--primary)" }}>
+      <p className="text-2xl font-extrabold mb-5" style={{ color: "var(--primary)" }}>
         {lc(listing.price)}
       </p>
+
+      {/* Compare with a saved listing: opens /compare with this listing locked on
+          the left. Shown only to signed-in users who have at least one *other*
+          saved listing to compare against (that populates the right-hand
+          picker); the currently-viewed listing itself doesn't count. */}
+      {isLoggedIn && savedIds.size - (savedIds.has(listing.id) ? 1 : 0) >= 1 && (
+        <button
+          onClick={() => router.push(`/compare?a=${listing.id}&lock=1`)}
+          className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+        >
+          <GitCompare size={15} /> {tr.listing.compareWithSaved}
+        </button>
+      )}
 
       {/* Gallery */}
       <div className="mb-10 rounded-3xl overflow-hidden bg-purple-50 dark:bg-purple-900/20 relative aspect-video shadow-sm">
@@ -233,6 +260,19 @@ export default function ListingDetailView({ listing }: { listing: Listing }) {
           </div>
         </aside>
       </div>
+
+      {/* Similar listings (content-based, by embedding similarity). Hidden when
+          there are none — e.g. before embeddings/migration 0015 are in place. */}
+      {similar.length > 0 && (
+        <section className="mt-14">
+          <h2 className="text-2xl font-extrabold text-foreground mb-6">{tr.listing.similar}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {similar.map((l) => (
+              <ListingCard key={l.id} listing={l} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

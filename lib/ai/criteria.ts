@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { AMENITY_KEYS, type Amenity, type ListingFilters, type LocationGroup, type TextFilter } from "@/lib/listings/types";
 import type { Lang } from "@/lib/i18n/translations";
 
@@ -70,6 +71,88 @@ export const CRITERIA_JSON_SCHEMA = {
   },
 } as const;
 
+// ── Lenient parsing / validation of model output ─────────────────────────────
+// OpenAI's strict json_schema output always parses cleanly, but configurable /
+// open models (phase 10) often wrap JSON in prose or ```fences``` and skip or
+// mistype fields. This Zod schema normalizes any object into a valid AiCriteria:
+// every field has a `.catch(default)` so a bad/missing field falls back instead
+// of throwing, and amenity arrays are filtered to the known keys. Pure — no
+// server imports — so it is unit-testable.
+const amenityArray = z
+  .array(z.string())
+  .catch([])
+  .transform((arr) => arr.filter((a): a is Amenity => (AMENITY_KEYS as readonly string[]).includes(a)));
+
+const CriteriaZod = z.object({
+  city: z.string().nullable().catch(null),
+  neighborhoods: z.array(z.string()).catch([]),
+  priceMin: z.number().nullable().catch(null),
+  priceMax: z.number().nullable().catch(null),
+  areaMin: z.number().nullable().catch(null),
+  areaMax: z.number().nullable().catch(null),
+  roomsMin: z.number().nullable().catch(null),
+  roomsMax: z.number().nullable().catch(null),
+  mustHave: amenityArray,
+  forbidden: amenityArray,
+  niceToHave: amenityArray,
+  relevanceQuery: z.string().nullable().catch(null),
+  textExclude: z
+    .array(
+      z.object({
+        labelHr: z.string().catch(""),
+        labelEn: z.string().catch(""),
+        terms: z.array(z.string()).catch([]),
+      }),
+    )
+    .catch([])
+    // Keep only entries that actually carry a label and at least one term.
+    .transform((arr) => arr.filter((t) => (t.labelHr || t.labelEn) && t.terms.length > 0)),
+  reply: z.string().catch(""),
+});
+
+// Extract the first balanced {...} JSON object from a string, tolerating
+// Markdown code fences and surrounding prose that open models tend to add.
+function extractJsonObject(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+// Parse a model's raw text answer into a validated AiCriteria, recovering from
+// fenced/prose-wrapped JSON and normalizing every field. Returns null only when
+// no JSON object can be found or parsed at all.
+export function parseCriteria(content: string): AiCriteria | null {
+  const json = extractJsonObject(content ?? "");
+  if (!json) return null;
+  let raw: unknown;
+  try {
+    raw = JSON.parse(json);
+  } catch {
+    return null;
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const result = CriteriaZod.safeParse(raw);
+  return result.success ? (result.data as AiCriteria) : null;
+}
+
 export function buildSystemPrompt(locations: LocationGroup[], lang: Lang): string {
   const cities = locations.map((l) => l.city).join(", ") || "(none)";
   const neighborhoods = locations
@@ -91,13 +174,15 @@ export function buildSystemPrompt(locations: LocationGroup[], lang: Lang): strin
     "- forbidden: amenities the user explicitly does NOT want (hard filter).",
     "- niceToHave: amenities that are merely preferred (soft — do not exclude listings without them).",
     "An amenity must appear in at most one of those lists.",
+    "Decide mustHave vs niceToHave from how the wish is phrased. A plainly stated amenity — a bare adjective or a simple 'with X' (e.g. 'namješten stan' / 'a furnished apartment', 'sa balkonom' / 'with a balcony') — is a REQUIREMENT and goes to mustHave. Downgrade it to niceToHave ONLY when the wish is explicitly softened by a hedging word such as 'po mogućnosti', 'idealno', 'ako može', 'ideally', 'preferably', 'if possible', or phrased as a bonus ('a plus', 'nice to have'). When unsure, prefer mustHave.",
     "",
     "Numbers: prices are euros (sale = total price, rent = monthly). Rooms are bedroom counts; 'studio' = 0, 'one-bed' = 1, etc. Use roomsMin/roomsMax for ranges ('2 to 3 rooms' → min 2, max 3; 'exactly 2' → min 2, max 2; '2+' → min 2).",
     "Put fuzzy or descriptive desires that are not concrete filters (e.g. 'near a park', 'quiet', 'renovated', 'great view', 'close to tram', 'near the center') into relevanceQuery for semantic ranking — never invent filters for them.",
     "",
     "textExclude: hard NEGATIVE constraints that are NOT one of the four amenities and NOT a numeric range — most often a floor level the user rules out (e.g. 'not on the ground floor', 'no basement', 'not the top floor'). Each distinct exclusion is its OWN entry; never merge two into one. For each entry: 'labelHr' is a short Croatian phrase naming the exclusion (e.g. 'ne u prizemlju') and 'labelEn' is the SAME phrase in English (e.g. 'not on the ground floor') — ALWAYS provide both, regardless of the user's language, so the chip can show in whichever language the page is set to; 'terms' are the lowercase words that would appear in a listing describing the UNWANTED thing, given in BOTH Croatian and English so the free-text description can be matched (e.g. ground floor -> [\"prizemlje\", \"prizemlju\", \"ground floor\"]; basement -> [\"suteren\", \"podrum\", \"basement\"]). A listing is removed if any term appears in its title or description.",
     "Keep every constraint atomic and in its own field: a location wish like 'near the center' stays in relevanceQuery, while 'not on the ground floor' is a SEPARATE textExclude entry. Never combine distinct wishes into one relevanceQuery string or one textExclude entry.",
-    "Example: 'dvosoban stan blizu centra, svakako s balkonom, po mogućnosti namješten, ali ne u prizemlju' -> roomsMin 2, roomsMax 2; mustHave [balcony]; niceToHave [furnished]; relevanceQuery 'near the center'; textExclude [{labelHr: 'ne u prizemlju', labelEn: 'not on the ground floor', terms: ['prizemlje','prizemlju','ground floor']}].",
+    "Example (softened → niceToHave): 'dvosoban stan blizu centra, svakako s balkonom, po mogućnosti namješten, ali ne u prizemlju' -> roomsMin 2, roomsMax 2; mustHave [balcony]; niceToHave [furnished]; relevanceQuery 'near the center'; textExclude [{labelHr: 'ne u prizemlju', labelEn: 'not on the ground floor', terms: ['prizemlje','prizemlju','ground floor']}].",
+    "Example (bare adjective → mustHave): 'namješten stan, ali ne u prizemlju' -> mustHave [furnished]; textExclude [{labelHr: 'ne u prizemlju', labelEn: 'not on the ground floor', terms: ['prizemlje','prizemlju','ground floor']}]. Here 'namješten' is stated plainly, so furnished is a requirement (mustHave), not niceToHave.",
     "",
     "If the user clears or resets, return empty arrays and null scalars.",
     "",

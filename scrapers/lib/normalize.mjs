@@ -101,14 +101,44 @@ export function listingId(source, externalId) {
 //   "Primorsko-goranska, Opatija - Okolica, Ičići"
 // Split the leading county off and keep the rest as the app's "City,
 // Neighborhood" string (the city column the browse filters group on).
+// Zagreb is one city. Every listing in the city of Zagreb — recognized by the
+// "Grad Zagreb" county (or a district token that itself names Zagreb, e.g.
+// "Novi Zagreb - Istok") — is stored as city "Zagreb", with the district
+// (Sesvete, Trnje, Maksimir, Novi Zagreb - Istok, …) kept as the neighborhood.
+// The finer sub-area (e.g. "Sesvetski Kobiljak") is dropped so the neighborhood
+// level is the recognizable Zagreb kvart. Mirrors fetchLocations() + migration
+// 0012. NOTE: "Zagrebačka" (the surrounding county) is deliberately NOT matched.
+export function isZagrebCityCounty(county) {
+  return /^\s*(grad\s+)?zagreb\s*$/i.test(String(county || ""));
+}
+
 export function splitLocation(raw) {
   const parts = String(raw || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  if (parts.length >= 3) return { county: parts[0], city: parts.slice(1).join(", ") };
-  if (parts.length === 2) return { county: parts[0], city: parts[1] };
-  return { county: "", city: parts[0] || "" };
+  let county, rest;
+  if (parts.length >= 3) {
+    county = parts[0];
+    rest = parts.slice(1);
+  } else if (parts.length === 2) {
+    county = parts[0];
+    rest = [parts[1]];
+  } else {
+    county = "";
+    rest = parts.length ? [parts[0]] : [];
+  }
+  const district = rest[0] || "";
+  if (isZagrebCityCounty(county) || /zagreb/i.test(district)) {
+    // District is the neighborhood — unless it is itself just "Zagreb"/"Grad
+    // Zagreb", in which case there is no separate neighborhood.
+    let nbhd = /^(grad\s+)?zagreb$/i.test(district) ? "" : district;
+    // "Novi Zagreb" is treated as one kvart: its "istok"/"zapad" halves collapse
+    // into a single "Novi Zagreb" neighborhood.
+    if (/^novi\s+zagreb/i.test(nbhd)) nbhd = "Novi Zagreb";
+    return { county: county || "Grad Zagreb", city: nbhd ? `Zagreb, ${nbhd}` : "Zagreb" };
+  }
+  return { county, city: rest.join(", ") };
 }
 
 // Detect amenities from free text (description / feature list). Conservative:

@@ -30,6 +30,11 @@ interface AppState {
   listingOrigin: string;
   getBrowseSnapshot: (key: string) => BrowseSnapshot | undefined;
   setBrowseSnapshot: (key: string, snapshot: BrowseSnapshot) => void;
+  // Saved-search notifications: number of new matching listings across all of
+  // the user's saved searches (server-computed at load). Cleared locally when
+  // the user opens the saved-searches page.
+  newSearchCount: number;
+  clearSearchNotifications: () => void;
   // One-shot scroll position (keyed by the path we left) for restoring the
   // browse page exactly where the user was when they opened a listing.
   consumeScroll: (key: string) => number | undefined;
@@ -50,10 +55,12 @@ export function AppProvider({
   children,
   profile,
   initialSavedIds = [],
+  initialNewSearchCount = 0,
 }: {
   children: ReactNode;
   profile: Profile | null;
   initialSavedIds?: string[];
+  initialNewSearchCount?: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,6 +69,7 @@ export function AppProvider({
   const [lang, setLang] = useState<Lang>("en");
   const [dark, setDark] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set(initialSavedIds));
+  const [newSearchCount, setNewSearchCount] = useState(initialNewSearchCount);
   const [listingOrigin, setListingOrigin] = useState("");
   const [showSignOut, setShowSignOut] = useState(false);
   const browseSnapshots = useRef<Record<string, BrowseSnapshot>>({});
@@ -77,6 +85,13 @@ export function AppProvider({
   useEffect(() => {
     setSavedIds(new Set(savedKey ? savedKey.split(",") : []));
   }, [savedKey]);
+
+  // Re-sync the notification count whenever the server recomputes it (full load
+  // or router.refresh()). Opening the saved-searches page clears it locally.
+  useEffect(() => {
+    setNewSearchCount(initialNewSearchCount);
+  }, [initialNewSearchCount]);
+  const clearSearchNotifications = () => setNewSearchCount(0);
 
   const toggleLang = () => setLang((l) => (l === "en" ? "hr" : "en"));
   const toggleDark = () => setDark((d) => !d);
@@ -150,6 +165,8 @@ export function AppProvider({
         getBrowseSnapshot,
         setBrowseSnapshot,
         consumeScroll,
+        newSearchCount,
+        clearSearchNotifications,
       }}
     >
       {children}

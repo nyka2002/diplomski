@@ -4,7 +4,7 @@
 //   set -a && . ./.env.local && set +a && node scrapers/run.mjs [flags]
 //
 // Flags:
-//   --source=njuskalo|indeks|all   which source(s)            (default: all)
+//   --source=njuskalo|index|oglasnik|all  which source(s)     (default: all)
 //   --type=sale|rent|all           which category             (default: all)
 //   --limit=N                      detail pages per source/type (default: 25)
 //   --dry-run                      crawl + normalize, no DB writes

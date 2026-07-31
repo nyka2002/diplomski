@@ -156,13 +156,17 @@ await check("submitting unknown credentials is rejected (no account created)", a
   await page.getByLabel("username / email address").fill(`__nobody_${Date.now()}`);
   await page.getByLabel("password").fill("secret123");
   await page.getByRole("button", { name: "sign in", exact: true }).click();
-  await page.waitForTimeout(600);
-  const incorrect = await page.getByText("the entered data is incorrect").isVisible().catch(() => false);
-  const notConfigured = await page
-    .getByText("authentication is not configured yet.", { exact: false })
-    .isVisible()
+  // Real Supabase auth can take a couple of seconds to reject — wait for either
+  // banner to appear rather than a fixed delay (the old 600ms wait was flaky).
+  const rejection = page.getByText(
+    /the entered data is incorrect|authentication is not configured yet\./i,
+  );
+  const shown = await rejection
+    .first()
+    .waitFor({ state: "visible", timeout: 8000 })
+    .then(() => true)
     .catch(() => false);
-  expect(incorrect || notConfigured, "expected an auth-rejection or not-configured banner");
+  expect(shown, "expected an auth-rejection or not-configured banner");
   // Either way we must NOT be logged in.
   expect(!page.url().endsWith("/"), "should remain on the sign-in page");
 });
@@ -434,6 +438,19 @@ if (CONFIGURED) {
         .first()
         .waitFor({ state: "visible", timeout: 5000 });
       await page.setViewportSize({ width: 1280, height: 900 });
+    });
+
+    await check("UI: /compare is gated to signed-in users", async () => {
+      // Comparison runs only over a user's saved listings, so the route is
+      // protected; an anon visitor is redirected to sign-in.
+      await page.goto(`${BASE}/compare`, { waitUntil: "networkidle" });
+      expect(/\/sign-in(\?|$)/.test(page.url()), `expected redirect to /sign-in, got ${page.url()}`);
+    });
+
+    await check("UI: /saved-searches is gated to signed-in users", async () => {
+      // Saved searches are per-user, so the route is protected.
+      await page.goto(`${BASE}/saved-searches`, { waitUntil: "networkidle" });
+      expect(/\/sign-in(\?|$)/.test(page.url()), `expected redirect to /sign-in, got ${page.url()}`);
     });
 
     // ── Phase 4: admin access control (the test session is anon or non-admin,

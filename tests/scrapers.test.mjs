@@ -117,15 +117,63 @@ check("parsePostedAt: Njuškalo 'DD.MM.YYYY. u HH:MM'", () => {
 
 // ── location split (county-first) ───────────────────────────────────────────────
 check("splitLocation: county / city / neighborhood", () => {
-  assert.deepEqual(splitLocation("Grad Zagreb, Sesvete, Sesvetski Kobiljak"), {
-    county: "Grad Zagreb",
-    city: "Sesvete, Sesvetski Kobiljak",
+  // Non-Zagreb counties: leading county split off, rest kept as "City, Neighborhood".
+  assert.deepEqual(splitLocation("Primorsko-goranska, Opatija - Okolica, Ičići"), {
+    county: "Primorsko-goranska",
+    city: "Opatija - Okolica, Ičići",
   });
   assert.deepEqual(splitLocation("Primorsko-goranska, Opatija"), {
     county: "Primorsko-goranska",
     city: "Opatija",
   });
-  assert.deepEqual(splitLocation("Zagreb"), { county: "", city: "Zagreb" });
+});
+
+// ── Zagreb is one city: districts become neighborhoods of "Zagreb" ──────────────
+check("splitLocation: Zagreb districts become neighborhoods of Zagreb", () => {
+  // District (Sesvete) → neighborhood; finer sub-area (Sesvetski Kobiljak) dropped.
+  assert.deepEqual(splitLocation("Grad Zagreb, Sesvete, Sesvetski Kobiljak"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Sesvete",
+  });
+  // Two-part Zagreb: district kept as neighborhood.
+  assert.deepEqual(splitLocation("Grad Zagreb, Trnje"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Trnje",
+  });
+  // "Novi Zagreb" is one kvart: its istok/zapad halves collapse into "Novi Zagreb".
+  assert.deepEqual(splitLocation("Grad Zagreb, Novi Zagreb - Istok, Sopot"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Novi Zagreb",
+  });
+  // Detected via the district token too, even without an explicit county.
+  assert.deepEqual(splitLocation("Novi Zagreb - Zapad"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Novi Zagreb",
+  });
+  // A bare "Zagreb" → city Zagreb, no neighborhood.
+  assert.deepEqual(splitLocation("Zagreb"), { county: "Grad Zagreb", city: "Zagreb" });
+});
+
+// ── Oglasnik location format ────────────────────────────────────────────────
+// Oglasnik reports location as "Hrvatska, Županija, Grad, Naselje"; the adapter
+// drops the leading "Hrvatska," country token and feeds the rest to the shared
+// county-first splitter. These are the post-strip strings seen in the dry-run.
+check("splitLocation: oglasnik post-'Hrvatska,' strings", () => {
+  // Zagreb district → neighborhood of Zagreb (finer sub-area "Vrhovec" dropped).
+  assert.deepEqual(splitLocation("Grad Zagreb, Črnomerec, Vrhovec"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Črnomerec",
+  });
+  // Two-part Zagreb: the district is kept as the neighborhood.
+  assert.deepEqual(splitLocation("Grad Zagreb, Trešnjevka - Sjever"), {
+    county: "Grad Zagreb",
+    city: "Zagreb, Trešnjevka - Sjever",
+  });
+  // Non-Zagreb county stays county-first, city keeps "City, Neighborhood".
+  assert.deepEqual(splitLocation("Splitsko-dalmatinska, Split - Okolica, Stobreč"), {
+    county: "Splitsko-dalmatinska",
+    city: "Split - Okolica, Stobreč",
+  });
 });
 
 // ── full normalize ────────────────────────────────────────────────────────────

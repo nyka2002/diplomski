@@ -45,6 +45,19 @@ const RANK_CANDIDATES = 1000;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ListingQueryBuilder = any;
 
+// Whether the `duplicate_of` column (migration 0013) exists. Probed once and
+// cached so browse keeps working before the migration is applied: if the column
+// is missing we simply don't filter on it. When present, cross-source duplicates
+// (duplicate_of not null) are hidden from every browse/AI query.
+let dupColumn: boolean | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function duplicatesHidden(supabase: any): Promise<boolean> {
+  if (dupColumn !== null) return dupColumn;
+  const { error } = await supabase.from("listings").select("duplicate_of").limit(1);
+  dupColumn = !error;
+  return dupColumn;
+}
+
 // Strip characters with special meaning in ILIKE / PostgREST filter values so a
 // model-provided term can be interpolated safely. Keeps letters (any language),
 // digits, spaces and hyphens; bounds the length.
@@ -59,8 +72,15 @@ function sanitizeIlikeTerm(raw: string): string {
 
 // Apply the hard filters (status, type, location, ranges, required + forbidden
 // amenities) shared by every browse/AI query.
-function applyHardFilters(qb: ListingQueryBuilder, query: ListingQuery): ListingQueryBuilder {
+function applyHardFilters(
+  qb: ListingQueryBuilder,
+  query: ListingQuery,
+  hideDuplicates: boolean,
+): ListingQueryBuilder {
   let q = qb.eq("status", "active");
+  // Hide cross-source near-duplicates (canonical rows kept). Skipped when the
+  // column isn't present yet so browse never breaks before migration 0013.
+  if (hideDuplicates) q = q.is("duplicate_of", null);
   if (query.type) q = q.eq("type", query.type);
   if (query.county) q = q.eq("county", query.county);
   if (query.city && query.neighborhoods?.length) {
@@ -115,11 +135,13 @@ export async function fetchListings(query: ListingQuery): Promise<ListingPage> {
   const sort = SORT_COLUMN[query.sort ?? DEFAULT_SORT];
   const nice = query.niceToHave ?? [];
   const ranked = Boolean(query.relevance) || nice.length > 0;
+  const hideDup = await duplicatesHidden(supabase);
 
   if (!ranked) {
     let q = applyHardFilters(
       supabase.from("listings").select(LISTING_COLUMNS, { count: "exact" }),
       query,
+      hideDup,
     );
     q = q.order(sort.col, { ascending: sort.asc }).order("id", { ascending: true });
     const from = (page - 1) * pageSize;
@@ -136,7 +158,7 @@ export async function fetchListings(query: ListingQuery): Promise<ListingPage> {
   }
 
   // ── Ranked mode ────────────────────────────────────────────────────────────
-  let q = applyHardFilters(supabase.from("listings").select(LISTING_COLUMNS), query);
+  let q = applyHardFilters(supabase.from("listings").select(LISTING_COLUMNS), query, hideDup);
   q = q.order(sort.col, { ascending: sort.asc }).order("id", { ascending: true }).limit(RANK_CANDIDATES);
   const { data, error } = await q;
   if (error) {
@@ -209,16 +231,19 @@ export async function fetchNewestByType(type: "sale" | "rent", limit = 6): Promi
 export async function fetchLocations(type?: "sale" | "rent"): Promise<LocationGroup[]> {
   if (!isSupabaseConfigured) return [];
   const supabase = await createClient();
+  const hideDup = await duplicatesHidden(supabase);
   // Prefer county-aware grouping; fall back to city-only if the `county` column
   // isn't present yet (migration 0006 not applied), so the location filter keeps
   // working either way.
   const base = () => {
     let q = supabase.from("listings").select("city, county").eq("status", "active");
+    if (hideDup) q = q.is("duplicate_of", null);
     if (type) q = q.eq("type", type);
     return q;
   };
   const fallback = () => {
     let q = supabase.from("listings").select("city").eq("status", "active");
+    if (hideDup) q = q.is("duplicate_of", null);
     if (type) q = q.eq("type", type);
     return q;
   };
@@ -234,16 +259,42 @@ export async function fetchLocations(type?: "sale" | "rent"): Promise<LocationGr
     const full = (row.city as string) ?? "";
     const county = ((row.county as string | null) ?? "").trim();
     const idx = full.indexOf(", ");
-    const city = idx >= 0 ? full.slice(0, idx) : full;
-    const neighborhood = idx >= 0 ? full.slice(idx + 2) : null;
+    const head = idx >= 0 ? full.slice(0, idx) : full;
+    const tail = idx >= 0 ? full.slice(idx + 2) : null;
+    // Zagreb is one city: the "Grad Zagreb" county (or a district token that
+    // itself names Zagreb) means the city is "Zagreb" and the district is the
+    // neighborhood. Robust to historical rows not yet migrated/re-crawled;
+    // mirrors splitLocation() + migration 0012.
+    const inZagreb = /^(grad\s+)?zagreb$/i.test(county) || /zagreb/i.test(head);
+    let city: string;
+    let neighborhood: string | null;
+    if (inZagreb) {
+      city = "Zagreb";
+      // The district is `head`, unless `head` is itself just "Zagreb" (then the
+      // already-migrated neighborhood lives in the tail).
+      neighborhood = /^(grad\s+)?zagreb$/i.test(head) ? tail : head;
+    } else {
+      city = head;
+      neighborhood = tail;
+    }
+    // "Novi Zagreb" is one kvart: collapse its "istok"/"zapad" halves.
+    if (neighborhood && /^novi\s+zagreb/i.test(neighborhood)) neighborhood = "Novi Zagreb";
     if (!city) continue;
     const key = `${county} ${city}`;
     if (!map.has(key)) map.set(key, { county, city, set: new Set() });
     if (neighborhood) map.get(key)!.set.add(neighborhood);
   }
+  // Sort county, city and neighborhood alphabetically with Croatian collation
+  // (so č, ć, š, ž, đ order correctly, not after "z"). The UI derives the
+  // county/city/neighborhood dropdown order straight from this order.
+  const hr = new Intl.Collator("hr");
   return [...map.values()]
-    .map(({ county, city, set }) => ({ county, city, neighborhoods: [...set].sort() }))
-    .sort((a, b) => a.county.localeCompare(b.county) || a.city.localeCompare(b.city));
+    .map(({ county, city, set }) => ({
+      county,
+      city,
+      neighborhoods: [...set].sort((a, b) => hr.compare(a, b)),
+    }))
+    .sort((a, b) => hr.compare(a.county, b.county) || hr.compare(a.city, b.city));
 }
 
 // A user's saved listings, newest-saved first.

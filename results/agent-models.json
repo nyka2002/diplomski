@@ -1,0 +1,891 @@
+{
+  "baseUrl": "http://localhost:3000",
+  "runs": [
+    {
+      "model": "gpt-4o-mini",
+      "caseCount": 31,
+      "perCase": [
+        {
+          "id": "en-rooms-amenities",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-rooms-amenities",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-city-sale",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "city": true,
+            "neighborhoods": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-city-rent",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "city": true,
+            "neighborhoods": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-ranges",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMax": true,
+            "areaMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-ranges",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMax": true,
+            "areaMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-furnished-noground",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-furnished-noground",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-parking-nobasement",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-relevance-nice",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "niceToHave": true,
+            "relevance": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-relevance-nice",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "niceToHave": true,
+            "relevance": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-rooms-range-forbidden",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true,
+            "forbidden": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-multiturn-remove",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-multiturn-add",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMax": true,
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-onebed",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-jednosoban",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-threebed",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-trosoban",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-atleast3",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-najmanje3",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-price-min",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-price-between",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMin": true,
+            "priceMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-area-max",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "areaMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-area-between",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "areaMin": true,
+            "areaMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-balcony-parking",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-namjesten-parking",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-nice-furnished",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "niceToHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-nice-balcony",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "niceToHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-no-topfloor",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-multiturn-price-change",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-multiturn-add-parking",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        }
+      ],
+      "extraction": {
+        "perField": {
+          "areaMax": {
+            "correct": 2,
+            "total": 2
+          },
+          "areaMin": {
+            "correct": 3,
+            "total": 3
+          },
+          "city": {
+            "correct": 2,
+            "total": 2
+          },
+          "forbidden": {
+            "correct": 1,
+            "total": 1
+          },
+          "mustHave": {
+            "correct": 11,
+            "total": 11
+          },
+          "neighborhoods": {
+            "correct": 2,
+            "total": 2
+          },
+          "niceToHave": {
+            "correct": 4,
+            "total": 4
+          },
+          "priceMax": {
+            "correct": 5,
+            "total": 5
+          },
+          "priceMin": {
+            "correct": 2,
+            "total": 2
+          },
+          "relevance": {
+            "correct": 2,
+            "total": 2
+          },
+          "roomsMax": {
+            "correct": 9,
+            "total": 9
+          },
+          "roomsMin": {
+            "correct": 11,
+            "total": 11
+          },
+          "textExclude": {
+            "correct": 5,
+            "total": 5
+          }
+        },
+        "overall": {
+          "correct": 59,
+          "total": 59,
+          "pct": 1
+        },
+        "fullyCorrect": 31
+      },
+      "compliance": {
+        "listings": 1327,
+        "violating": 0,
+        "cleanPct": 1
+      },
+      "ranking": {
+        "pairs": 196,
+        "ordered": 196,
+        "orderedPct": 1,
+        "monotonic": 4,
+        "rankedCases": 4
+      },
+      "multiturn": {
+        "total": 4,
+        "fullyCorrect": 4,
+        "cases": [
+          {
+            "id": "en-multiturn-remove",
+            "ok": true
+          },
+          {
+            "id": "hr-multiturn-add",
+            "ok": true
+          },
+          {
+            "id": "en-multiturn-price-change",
+            "ok": true
+          },
+          {
+            "id": "hr-multiturn-add-parking",
+            "ok": true
+          }
+        ]
+      }
+    },
+    {
+      "model": "gpt-3.5-turbo",
+      "caseCount": 31,
+      "perCase": [
+        {
+          "id": "en-rooms-amenities",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-rooms-amenities",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-city-sale",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "city": true,
+            "neighborhoods": false
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-city-rent",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": false,
+          "fields": {
+            "city": true,
+            "neighborhoods": false
+          },
+          "extras": []
+        },
+        {
+          "id": "en-ranges",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "priceMax": true,
+            "areaMin": false
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-ranges",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "priceMax": true,
+            "areaMin": false
+          },
+          "extras": []
+        },
+        {
+          "id": "en-furnished-noground",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-furnished-noground",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-parking-nobasement",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-relevance-nice",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": false,
+          "fields": {
+            "niceToHave": false,
+            "relevance": true
+          },
+          "extras": [
+            "mustHave"
+          ]
+        },
+        {
+          "id": "en-relevance-nice",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "niceToHave": true,
+            "relevance": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-rooms-range-forbidden",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true,
+            "forbidden": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-multiturn-remove",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-multiturn-add",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "priceMax": false,
+            "mustHave": true,
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-onebed",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-jednosoban",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-threebed",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-trosoban",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-atleast3",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-najmanje3",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-price-min",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "priceMin": false
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-price-between",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMin": true,
+            "priceMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-area-max",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": false,
+          "fields": {
+            "areaMax": false
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-area-between",
+          "lang": "hr",
+          "type": "sale",
+          "allCorrect": false,
+          "fields": {
+            "areaMin": false,
+            "areaMax": false
+          },
+          "extras": []
+        },
+        {
+          "id": "en-balcony-parking",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-namjesten-parking",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "mustHave": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-nice-furnished",
+          "lang": "en",
+          "type": "rent",
+          "allCorrect": false,
+          "fields": {
+            "niceToHave": false
+          },
+          "extras": [
+            "mustHave"
+          ]
+        },
+        {
+          "id": "hr-nice-balcony",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": false,
+          "fields": {
+            "niceToHave": false
+          },
+          "extras": [
+            "mustHave"
+          ]
+        },
+        {
+          "id": "en-no-topfloor",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "textExclude": true
+          },
+          "extras": []
+        },
+        {
+          "id": "en-multiturn-price-change",
+          "lang": "en",
+          "type": "sale",
+          "allCorrect": true,
+          "fields": {
+            "priceMax": true
+          },
+          "extras": []
+        },
+        {
+          "id": "hr-multiturn-add-parking",
+          "lang": "hr",
+          "type": "rent",
+          "allCorrect": true,
+          "fields": {
+            "roomsMin": true,
+            "roomsMax": true,
+            "mustHave": true
+          },
+          "extras": []
+        }
+      ],
+      "extraction": {
+        "perField": {
+          "areaMax": {
+            "correct": 0,
+            "total": 2
+          },
+          "areaMin": {
+            "correct": 0,
+            "total": 3
+          },
+          "city": {
+            "correct": 2,
+            "total": 2
+          },
+          "forbidden": {
+            "correct": 1,
+            "total": 1
+          },
+          "mustHave": {
+            "correct": 11,
+            "total": 11
+          },
+          "neighborhoods": {
+            "correct": 0,
+            "total": 2
+          },
+          "niceToHave": {
+            "correct": 1,
+            "total": 4
+          },
+          "priceMax": {
+            "correct": 4,
+            "total": 5
+          },
+          "priceMin": {
+            "correct": 1,
+            "total": 2
+          },
+          "relevance": {
+            "correct": 2,
+            "total": 2
+          },
+          "roomsMax": {
+            "correct": 9,
+            "total": 9
+          },
+          "roomsMin": {
+            "correct": 11,
+            "total": 11
+          },
+          "textExclude": {
+            "correct": 5,
+            "total": 5
+          }
+        },
+        "overall": {
+          "correct": 47,
+          "total": 59,
+          "pct": 0.7966101694915254
+        },
+        "fullyCorrect": 20
+      },
+      "compliance": {
+        "listings": 1398,
+        "violating": 0,
+        "cleanPct": 1
+      },
+      "ranking": {
+        "pairs": 49,
+        "ordered": 49,
+        "orderedPct": 1,
+        "monotonic": 1,
+        "rankedCases": 1
+      },
+      "multiturn": {
+        "total": 4,
+        "fullyCorrect": 3,
+        "cases": [
+          {
+            "id": "en-multiturn-remove",
+            "ok": true
+          },
+          {
+            "id": "hr-multiturn-add",
+            "ok": false
+          },
+          {
+            "id": "en-multiturn-price-change",
+            "ok": true
+          },
+          {
+            "id": "hr-multiturn-add-parking",
+            "ok": true
+          }
+        ]
+      }
+    }
+  ]
+}
