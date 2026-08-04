@@ -59,7 +59,7 @@ export default function HomeView({
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/60 dark:bg-white/10 text-purple-700 dark:text-purple-300 text-xs font-semibold mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-            {lang === "en" ? "real estate in croatia" : "nekretnine u hrvatskoj"}
+            {lang === "en" ? "real estate in Croatia" : "nekretnine u Hrvatskoj"}
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4 tracking-tight leading-tight">
             {tr.hero.title}

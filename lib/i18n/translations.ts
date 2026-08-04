@@ -535,12 +535,30 @@ const rawTranslations = {
   },
 };
 
+// Proper nouns that keep their leading capital even though the UI is otherwise
+// lowercased: the country name in both languages and its Croatian case forms.
+// The language/adjective "hrvatski" ("switch to croatian") is deliberately NOT
+// here — in Croatian orthography the demonym adjective is written lowercase.
+const KEEP_CAPITALIZED = new Set([
+  "croatia",
+  "hrvatska",
+  "hrvatske",
+  "hrvatskoj",
+  "hrvatsku",
+  "hrvatskom",
+]);
+
 // UI style rule: all interface text is rendered in lowercase, with all-caps
-// acronyms (e.g. "AI", "SETUP_SUPABASE") preserved. Listing-derived data
-// (titles, descriptions, specs, locations, prices) is never passed through this
-// — it keeps its original casing.
+// acronyms (e.g. "AI", "SETUP_SUPABASE") and the country name (Croatia /
+// Hrvatska) preserved. Listing-derived data (titles, descriptions, specs,
+// locations, prices) is never passed through this — it keeps its original casing.
 export function lowercasePreservingAcronyms(s: string): string {
-  return s.replace(/\p{L}+/gu, (w) => (w.length >= 2 && w === w.toUpperCase() ? w : w.toLowerCase()));
+  return s.replace(/\p{L}+/gu, (w) => {
+    if (w.length >= 2 && w === w.toUpperCase()) return w; // acronym
+    const lower = w.toLowerCase();
+    if (KEEP_CAPITALIZED.has(lower)) return lower.charAt(0).toUpperCase() + lower.slice(1);
+    return lower;
+  });
 }
 function deepLower<T>(value: T): T {
   if (typeof value === "string") return lowercasePreservingAcronyms(value) as unknown as T;
