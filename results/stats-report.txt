@@ -1,0 +1,30 @@
+════════ Agent extraction ════════
+
+gpt-3.5-turbo        fully-correct 61.8 %  95% CI [49.1 %, 74.5 %]  (n=55)
+gpt-4o-mini          fully-correct 100.0 %  95% CI [100.0 %, 100.0 %]  (n=55)
+gpt-4o               fully-correct 100.0 %  95% CI [100.0 %, 100.0 %]  (n=55)
+
+Error breakdown by criterion (gpt-3.5-turbo):
+   priceMax       5/7 wrong  (71.4 %)
+   areaMin        5/5 wrong  (100.0 %)
+   neighborhoods  4/4 wrong  (100.0 %)
+   niceToHave     4/6 wrong  (66.7 %)
+   areaMax        3/3 wrong  (100.0 %)
+   priceMin       1/3 wrong  (33.3 %)
+   roomsMin       0/15 wrong  (0.0 %)
+   roomsMax       0/14 wrong  (0.0 %)
+   mustHave       0/16 wrong  (0.0 %)
+   city           0/4 wrong  (0.0 %)
+   textExclude    0/7 wrong  (0.0 %)
+   relevance      0/4 wrong  (0.0 %)
+   forbidden      0/2 wrong  (0.0 %)
+   hallucinated-filter cases: 6/55
+
+Model comparison (McNemar, Holm-corrected):
+   gpt-3.5-turbo vs gpt-4o-mini: b=0 c=21 exact p=0.0000 p_holm=0.0000  *
+   gpt-3.5-turbo vs gpt-4o: b=0 c=21 exact p=0.0000 p_holm=0.0000  *
+   gpt-4o-mini vs gpt-4o: b=0 c=0 none p=1.0000 p_holm=1.0000
+
+════════ Inter-rater agreement ════════
+
+Cohen's kappa: 0.2506  (observed 54.3 %, expected 39.1 %, n=46)

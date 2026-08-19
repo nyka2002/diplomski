@@ -164,6 +164,77 @@ const CASES = [
   { id: "hr-multiturn-add-parking", lang: "hr", type: "rent",
     turns: ["dvosoban stan", "dodaj i parking"],
     gold: { roomsMin: 2, roomsMax: 2, mustHave: ["parking"] } },
+
+  // ── Second expansion (phase 12): larger set for the model comparison ─────────
+  // Room counts.
+  { id: "en-fourbed", lang: "en", type: "sale",
+    turns: ["a four-bedroom apartment"], gold: { roomsMin: 4, roomsMax: 4 } },
+  { id: "hr-cetverosoban", lang: "hr", type: "sale",
+    turns: ["četverosoban stan"], gold: { roomsMin: 4, roomsMax: 4 } },
+  { id: "en-two-to-three", lang: "en", type: "rent",
+    turns: ["an apartment with two to three rooms"], gold: { roomsMin: 2, roomsMax: 3 } },
+  { id: "hr-najvise-dvije", lang: "hr", type: "rent",
+    turns: ["stan s najviše dvije sobe"], gold: { roomsMax: 2 } },
+
+  // Price / area ranges.
+  { id: "en-price-max2", lang: "en", type: "sale",
+    turns: ["an apartment under 250000 euros"], gold: { priceMax: 250000 } },
+  { id: "hr-price-min", lang: "hr", type: "sale",
+    turns: ["stanovi iznad 120000 eura"], gold: { priceMin: 120000 } },
+  { id: "en-area-min", lang: "en", type: "rent",
+    turns: ["an apartment of at least 70 m2"], gold: { areaMin: 70 } },
+  { id: "hr-area-max", lang: "hr", type: "rent",
+    turns: ["stan do 90 kvadrata"], gold: { areaMax: 90 } },
+  { id: "en-price-area", lang: "en", type: "sale",
+    turns: ["an apartment up to 300000 euros and at least 60 m2"],
+    gold: { priceMax: 300000, areaMin: 60 } },
+
+  // Required amenities.
+  { id: "en-balcony", lang: "en", type: "sale",
+    turns: ["an apartment with a balcony"], gold: { mustHave: ["balcony"] } },
+  { id: "hr-parking", lang: "hr", type: "rent",
+    turns: ["stan s parkingom"], gold: { mustHave: ["parking"] } },
+  { id: "en-furnished-balcony", lang: "en", type: "rent",
+    turns: ["a furnished apartment with a balcony"], gold: { mustHave: ["furnished", "balcony"] } },
+  { id: "hr-three-amenities", lang: "hr", type: "rent",
+    turns: ["namješten stan s balkonom i parkingom"],
+    gold: { mustHave: ["furnished", "balcony", "parking"] } },
+
+  // Forbidden amenity.
+  { id: "hr-no-parking", lang: "hr", type: "rent",
+    turns: ["stan bez parkinga"], gold: { forbidden: ["parking"] } },
+
+  // Nice-to-have (explicitly softened).
+  { id: "en-nice-parking", lang: "en", type: "rent",
+    turns: ["an apartment, parking would be a plus"], gold: { niceToHave: ["parking"] } },
+  { id: "hr-nice-furnished", lang: "hr", type: "rent",
+    turns: ["stan, po mogućnosti namješten"], gold: { niceToHave: ["furnished"] } },
+
+  // Textual exclusion (standalone).
+  { id: "hr-no-ground", lang: "hr", type: "sale",
+    turns: ["stan, ne u prizemlju"], gold: { textExclude: [["prizemlj", "ground floor"]] } },
+  { id: "en-no-basement", lang: "en", type: "sale",
+    turns: ["an apartment, no basement"], gold: { textExclude: [["basement", "suteren", "podrum"]] } },
+
+  // Descriptive (semantic) queries — a non-empty relevance query is expected.
+  { id: "en-relevance-view", lang: "en", type: "sale",
+    turns: ["a bright apartment with a nice view"], gold: { relevance: true } },
+  { id: "hr-relevance-quiet", lang: "hr", type: "rent",
+    turns: ["miran stan okružen zelenilom"], gold: { relevance: true } },
+
+  // Multi-turn: change a value / remove an amenity.
+  { id: "en-multiturn-rooms-change", lang: "en", type: "rent",
+    turns: ["a two-bedroom apartment", "actually make it three bedrooms"],
+    gold: { roomsMin: 3, roomsMax: 3 } },
+  { id: "hr-multiturn-remove-parking", lang: "hr", type: "rent",
+    turns: ["stan s parkingom i balkonom", "makni parking"],
+    gold: { mustHave: ["balcony"] } },
+
+  // City / district extraction (Zagreb districts present in the catalog).
+  { id: "hr-city-maksimir", lang: "hr", type: "rent",
+    turns: ["stan u Maksimiru"], gold: { city: "Zagreb", neighborhoods: ["Maksimir"] } },
+  { id: "hr-city-crnomerec", lang: "hr", type: "sale",
+    turns: ["stan u Črnomercu"], gold: { city: "Zagreb", neighborhoods: ["Črnomerec"] } },
 ];
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

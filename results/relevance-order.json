@@ -8,14 +8,6 @@
       "lang": "en",
       "type": "rent",
       "rank": 1,
-      "listingId": "index-7408426"
-    },
-    {
-      "q": 1,
-      "query": "a bright quiet apartment near a park",
-      "lang": "en",
-      "type": "rent",
-      "rank": 2,
       "listingId": "oglasnik-3640910"
     },
     {
@@ -23,8 +15,16 @@
       "query": "a bright quiet apartment near a park",
       "lang": "en",
       "type": "rent",
+      "rank": 2,
+      "listingId": "njuskalo-51071565"
+    },
+    {
+      "q": 1,
+      "query": "a bright quiet apartment near a park",
+      "lang": "en",
+      "type": "rent",
       "rank": 3,
-      "listingId": "index-7408651"
+      "listingId": "njuskalo-51219589"
     },
     {
       "q": 1,
@@ -32,7 +32,7 @@
       "lang": "en",
       "type": "rent",
       "rank": 4,
-      "listingId": "njuskalo-50757570"
+      "listingId": "njuskalo-51225261"
     },
     {
       "q": 1,
@@ -40,7 +40,7 @@
       "lang": "en",
       "type": "rent",
       "rank": 5,
-      "listingId": "index-7408662"
+      "listingId": "index-7500041"
     },
     {
       "q": 1,
@@ -48,7 +48,7 @@
       "lang": "en",
       "type": "rent",
       "rank": 6,
-      "listingId": "njuskalo-47984441"
+      "listingId": "njuskalo-51225281"
     },
     {
       "q": 2,
@@ -56,7 +56,7 @@
       "lang": "en",
       "type": "sale",
       "rank": 1,
-      "listingId": "index-7438682"
+      "listingId": "njuskalo-50713646"
     },
     {
       "q": 2,
@@ -64,7 +64,7 @@
       "lang": "en",
       "type": "sale",
       "rank": 2,
-      "listingId": "njuskalo-44443000"
+      "listingId": "njuskalo-51106015"
     },
     {
       "q": 2,
@@ -72,7 +72,7 @@
       "lang": "en",
       "type": "sale",
       "rank": 3,
-      "listingId": "njuskalo-50850527"
+      "listingId": "njuskalo-50886097"
     },
     {
       "q": 2,
@@ -80,14 +80,6 @@
       "lang": "en",
       "type": "sale",
       "rank": 4,
-      "listingId": "njuskalo-50705021"
-    },
-    {
-      "q": 2,
-      "query": "a modern renovated flat in the city center",
-      "lang": "en",
-      "type": "sale",
-      "rank": 5,
       "listingId": "oglasnik-7038537"
     },
     {
@@ -95,8 +87,16 @@
       "query": "a modern renovated flat in the city center",
       "lang": "en",
       "type": "sale",
+      "rank": 5,
+      "listingId": "njuskalo-50178910"
+    },
+    {
+      "q": 2,
+      "query": "a modern renovated flat in the city center",
+      "lang": "en",
+      "type": "sale",
       "rank": 6,
-      "listingId": "njuskalo-50298402"
+      "listingId": "oglasnik-7038538"
     },
     {
       "q": 3,
@@ -104,6 +104,22 @@
       "lang": "en",
       "type": "rent",
       "rank": 1,
+      "listingId": "oglasnik-7091578"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 2,
+      "listingId": "njuskalo-51219589"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 3,
       "listingId": "oglasnik-7091584"
     },
     {
@@ -111,31 +127,7 @@
       "query": "a family-friendly apartment close to schools and shops",
       "lang": "en",
       "type": "rent",
-      "rank": 2,
-      "listingId": "njuskalo-50510983"
-    },
-    {
-      "q": 3,
-      "query": "a family-friendly apartment close to schools and shops",
-      "lang": "en",
-      "type": "rent",
-      "rank": 3,
-      "listingId": "index-7408651"
-    },
-    {
-      "q": 3,
-      "query": "a family-friendly apartment close to schools and shops",
-      "lang": "en",
-      "type": "rent",
       "rank": 4,
-      "listingId": "index-6215082"
-    },
-    {
-      "q": 3,
-      "query": "a family-friendly apartment close to schools and shops",
-      "lang": "en",
-      "type": "rent",
-      "rank": 5,
       "listingId": "oglasnik-7091613"
     },
     {
@@ -143,8 +135,16 @@
       "query": "a family-friendly apartment close to schools and shops",
       "lang": "en",
       "type": "rent",
-      "rank": 6,
+      "rank": 5,
       "listingId": "oglasnik-7067822"
+    },
+    {
+      "q": 3,
+      "query": "a family-friendly apartment close to schools and shops",
+      "lang": "en",
+      "type": "rent",
+      "rank": 6,
+      "listingId": "oglasnik-7067823"
     },
     {
       "q": 4,
@@ -152,7 +152,7 @@
       "lang": "en",
       "type": "sale",
       "rank": 1,
-      "listingId": "njuskalo-49417078"
+      "listingId": "njuskalo-51225282"
     },
     {
       "q": 4,
@@ -160,30 +160,6 @@
       "lang": "en",
       "type": "sale",
       "rank": 2,
-      "listingId": "njuskalo-49035616"
-    },
-    {
-      "q": 4,
-      "query": "a cozy apartment with a nice view",
-      "lang": "en",
-      "type": "sale",
-      "rank": 3,
-      "listingId": "index-7408138"
-    },
-    {
-      "q": 4,
-      "query": "a cozy apartment with a nice view",
-      "lang": "en",
-      "type": "sale",
-      "rank": 4,
-      "listingId": "index-6224464"
-    },
-    {
-      "q": 4,
-      "query": "a cozy apartment with a nice view",
-      "lang": "en",
-      "type": "sale",
-      "rank": 5,
       "listingId": "oglasnik-7090441"
     },
     {
@@ -191,8 +167,32 @@
       "query": "a cozy apartment with a nice view",
       "lang": "en",
       "type": "sale",
+      "rank": 3,
+      "listingId": "njuskalo-51231345"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 4,
+      "listingId": "njuskalo-50713646"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
+      "rank": 5,
+      "listingId": "njuskalo-51094178"
+    },
+    {
+      "q": 4,
+      "query": "a cozy apartment with a nice view",
+      "lang": "en",
+      "type": "sale",
       "rank": 6,
-      "listingId": "njuskalo-48093863"
+      "listingId": "njuskalo-50836829"
     },
     {
       "q": 5,
@@ -200,7 +200,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 1,
-      "listingId": "njuskalo-50831181"
+      "listingId": "index-7500041"
     },
     {
       "q": 5,
@@ -208,7 +208,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 2,
-      "listingId": "njuskalo-50907224"
+      "listingId": "njuskalo-51102812"
     },
     {
       "q": 5,
@@ -216,7 +216,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 3,
-      "listingId": "index-7245767"
+      "listingId": "oglasnik-7091583"
     },
     {
       "q": 5,
@@ -224,7 +224,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 4,
-      "listingId": "index-6215082"
+      "listingId": "index-7486331"
     },
     {
       "q": 5,
@@ -232,7 +232,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 5,
-      "listingId": "njuskalo-50855095"
+      "listingId": "njuskalo-31915485"
     },
     {
       "q": 5,
@@ -240,7 +240,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 6,
-      "listingId": "njuskalo-50759093"
+      "listingId": "oglasnik-7088270"
     },
     {
       "q": 6,
@@ -248,7 +248,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 1,
-      "listingId": "njuskalo-45392819"
+      "listingId": "njuskalo-50178910"
     },
     {
       "q": 6,
@@ -256,7 +256,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 2,
-      "listingId": "njuskalo-50653440"
+      "listingId": "njuskalo-51231302"
     },
     {
       "q": 6,
@@ -264,7 +264,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 3,
-      "listingId": "njuskalo-50687533"
+      "listingId": "njuskalo-50537192"
     },
     {
       "q": 6,
@@ -272,23 +272,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 4,
-      "listingId": "njuskalo-48877596"
-    },
-    {
-      "q": 6,
-      "query": "moderno uređen stan u centru grada",
-      "lang": "hr",
-      "type": "sale",
-      "rank": 5,
-      "listingId": "njuskalo-46464909"
-    },
-    {
-      "q": 6,
-      "query": "moderno uređen stan u centru grada",
-      "lang": "hr",
-      "type": "sale",
-      "rank": 6,
-      "listingId": "njuskalo-50705366"
+      "listingId": "njuskalo-51231280"
     },
     {
       "q": 7,
@@ -296,30 +280,6 @@
       "lang": "hr",
       "type": "rent",
       "rank": 1,
-      "listingId": "njuskalo-50831180"
-    },
-    {
-      "q": 7,
-      "query": "obiteljski stan blizu škola i trgovina",
-      "lang": "hr",
-      "type": "rent",
-      "rank": 2,
-      "listingId": "index-6215082"
-    },
-    {
-      "q": 7,
-      "query": "obiteljski stan blizu škola i trgovina",
-      "lang": "hr",
-      "type": "rent",
-      "rank": 3,
-      "listingId": "njuskalo-41757538"
-    },
-    {
-      "q": 7,
-      "query": "obiteljski stan blizu škola i trgovina",
-      "lang": "hr",
-      "type": "rent",
-      "rank": 4,
       "listingId": "oglasnik-7091583"
     },
     {
@@ -327,8 +287,32 @@
       "query": "obiteljski stan blizu škola i trgovina",
       "lang": "hr",
       "type": "rent",
+      "rank": 2,
+      "listingId": "njuskalo-51207341"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 3,
+      "listingId": "oglasnik-7037414"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
+      "rank": 4,
+      "listingId": "njuskalo-51219589"
+    },
+    {
+      "q": 7,
+      "query": "obiteljski stan blizu škola i trgovina",
+      "lang": "hr",
+      "type": "rent",
       "rank": 5,
-      "listingId": "njuskalo-49444859"
+      "listingId": "oglasnik-7091584"
     },
     {
       "q": 7,
@@ -336,7 +320,7 @@
       "lang": "hr",
       "type": "rent",
       "rank": 6,
-      "listingId": "njuskalo-50907224"
+      "listingId": "oglasnik-7088270"
     },
     {
       "q": 8,
@@ -344,7 +328,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 1,
-      "listingId": "index-6207798"
+      "listingId": "njuskalo-51231437"
     },
     {
       "q": 8,
@@ -352,7 +336,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 2,
-      "listingId": "njuskalo-50850187"
+      "listingId": "njuskalo-43734558"
     },
     {
       "q": 8,
@@ -360,7 +344,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 3,
-      "listingId": "index-7243065"
+      "listingId": "njuskalo-50194076"
     },
     {
       "q": 8,
@@ -368,7 +352,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 4,
-      "listingId": "njuskalo-39209960"
+      "listingId": "njuskalo-51231547"
     },
     {
       "q": 8,
@@ -376,7 +360,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 5,
-      "listingId": "index-7266103"
+      "listingId": "njuskalo-51231546"
     },
     {
       "q": 8,
@@ -384,7 +368,7 @@
       "lang": "hr",
       "type": "sale",
       "rank": 6,
-      "listingId": "index-7255481"
+      "listingId": "njuskalo-51231551"
     }
   ]
 }
